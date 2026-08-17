@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    @apply bg-cream text-sepia font-body antialiased;
+    background-image: radial-gradient(rgba(90, 70, 50, 0.06) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-wax;
+  }
+}

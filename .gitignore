@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+*.log
+
+# Local SQLite database (incl. WAL/SHM sidecars)
+apps/backend/medleys.sqlite
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.db
+.DS_Store
+coverage/
+.vite/
+.env
+.env.local

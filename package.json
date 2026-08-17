@@ -1,0 +1,23 @@
+{
+  "name": "medleys-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "dev:backend": "pnpm --filter @medleys/backend run dev",
+    "dev:frontend": "pnpm --filter @medleys/frontend run dev",
+    "seed": "pnpm --filter @medleys/backend run seed"
+  },
+  "packageManager": "pnpm@10.31.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  }
+}
