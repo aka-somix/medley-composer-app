@@ -38,9 +38,9 @@ describe("MedleyChain", () => {
     const next = song({ id: "s2", title: "Next Up" });
     const suggestion: Suggestion = {
       song: next,
-      verseSimilarity: 1,
-      chorusSimilarity: 1,
       score: 1,
+      bestMatch: { source: "verse", target: "verse", similarity: 1 },
+      matches: [{ source: "verse", target: "verse", similarity: 1 }],
     };
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify([suggestion]), {
@@ -58,6 +58,29 @@ describe("MedleyChain", () => {
     await user.click(pick);
 
     await waitFor(() => expect(onAppend).toHaveBeenCalledWith(next));
+  });
+
+  it("shows a chip naming the suggested song's matched section", async () => {
+    const next = song({ id: "s2", title: "Alt Match" });
+    const suggestion: Suggestion = {
+      song: next,
+      score: 0.9,
+      bestMatch: { source: "verse", target: "alternateVerse", similarity: 0.9 },
+      matches: [{ source: "verse", target: "alternateVerse", similarity: 0.9 }],
+    };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify([suggestion]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<MedleyChain chain={[song({})]} displayScale="C" onAppend={() => {}} />);
+
+    await user.click(screen.getByLabelText("Find a compatible next song"));
+    await screen.findByRole("button", { name: /Alt Match/ });
+    // "Alt Verse" appears only in the suggestion chip here (the chain song has no alt verse row).
+    expect(screen.getByText("Alt Verse")).toBeInTheDocument();
   });
 
   it("renders an alternate verse row when the song has one", () => {

@@ -15,6 +15,7 @@ const SONG: Song = {
   verseDegrees: ["1", "5", "6m", "4"],
   chorusDegrees: ["4", "1", "5", "6m"],
   bridgeDegrees: null,
+  alternateVerseDegrees: null,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 

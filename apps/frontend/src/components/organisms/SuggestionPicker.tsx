@@ -1,8 +1,16 @@
 import { useState } from "react";
-import type { Song } from "@medleys/shared";
+import type { Song, SongSection } from "@medleys/shared";
 import { Spinner } from "../atoms/Spinner.js";
 import { Tag } from "../atoms/Tag.js";
 import { useSuggestions } from "../../api/hooks.js";
+
+/** Chip text for the section of the suggested song that matched. */
+const SECTION_LABEL: Record<SongSection, string> = {
+  verse: "Verse",
+  chorus: "Chorus",
+  bridge: "Bridge",
+  alternateVerse: "Alt Verse",
+};
 
 /**
  * The "+" edge at the end of the chain. Expands to show songs compatible with
@@ -67,7 +75,11 @@ export function SuggestionPicker({
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate font-semibold">{s.song.title}</span>
-                    <Tag tone="mustard">{Math.round(s.score * 100)}%</Tag>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <span className="sr-only">Matched on </span>
+                      <Tag tone="neutral">{SECTION_LABEL[s.bestMatch.target]}</Tag>
+                      <Tag tone="mustard">{Math.round(s.score * 100)}%</Tag>
+                    </div>
                   </div>
                   <div className="mt-1 flex items-center gap-2 text-xs text-sepia/70">
                     <span className="truncate">{s.song.artist}</span>
