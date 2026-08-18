@@ -49,6 +49,35 @@ describe("SongService.create", () => {
     expect(song.bridgeDegrees).toEqual(["6m", "4", "1", "5"]);
   });
 
+  it("translates an optional alternate verse when provided", async () => {
+    const song = await container.songService.create({
+      title: "Alt Verse Song",
+      artist: "A",
+      bpm: 100,
+      scale: "C",
+      language: "English",
+      verseChords: "C, G, Am, F",
+      chorusChords: "F, C, G, Am",
+      bridgeChords: null,
+      alternateVerseChords: "Am, F, C, G",
+    });
+    expect(song.alternateVerseDegrees).toEqual(["6m", "4", "1", "5"]);
+  });
+
+  it("leaves alternateVerseDegrees null when omitted", async () => {
+    const song = await container.songService.create({
+      title: "No Alt",
+      artist: "A",
+      bpm: 100,
+      scale: "C",
+      language: "English",
+      verseChords: "C, G",
+      chorusChords: "F, C",
+      bridgeChords: null,
+    });
+    expect(song.alternateVerseDegrees).toBeNull();
+  });
+
   it("paginates and searches by title", async () => {
     for (const title of ["Alpha", "Beta", "Alpha Reprise"]) {
       await container.songService.create({

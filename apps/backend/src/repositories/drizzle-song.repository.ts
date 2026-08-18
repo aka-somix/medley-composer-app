@@ -15,6 +15,7 @@ function toSong(row: SongRow): Song {
     verseDegrees: row.verseDegrees,
     chorusDegrees: row.chorusDegrees,
     bridgeDegrees: row.bridgeDegrees ?? null,
+    alternateVerseDegrees: row.alternateVerseDegrees ?? null,
     createdAt: row.createdAt,
   };
 }

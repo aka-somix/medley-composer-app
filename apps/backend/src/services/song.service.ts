@@ -39,6 +39,7 @@ export class SongService {
       verseDegrees: chordsToDegrees(parseProgression(input.verseChords), input.scale),
       chorusDegrees: chordsToDegrees(parseProgression(input.chorusChords), input.scale),
       bridgeDegrees: translateSection(input.bridgeChords, input.scale),
+      alternateVerseDegrees: translateSection(input.alternateVerseChords, input.scale),
       createdAt: this.deps.now(),
     };
     return this.repo.create(song);
@@ -79,6 +80,8 @@ export class SongService {
       patch.chorusDegrees = chordsToDegrees(parseProgression(input.chorusChords), scale);
     if (input.bridgeChords !== undefined)
       patch.bridgeDegrees = translateSection(input.bridgeChords, scale);
+    if (input.alternateVerseChords !== undefined)
+      patch.alternateVerseDegrees = translateSection(input.alternateVerseChords, scale);
 
     const updated = await this.repo.update(id, patch);
     if (!updated) throw new NotFoundError("Song", id);

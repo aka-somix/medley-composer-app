@@ -35,8 +35,15 @@ function ensureSchema(raw: Database.Database): void {
       verse_degrees TEXT NOT NULL,
       chorus_degrees TEXT NOT NULL,
       bridge_degrees TEXT,
+      alternate_verse_degrees TEXT,
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_songs_title ON songs (title);
   `);
+  // Add the column to pre-existing databases created before this field existed.
+  try {
+    raw.exec("ALTER TABLE songs ADD COLUMN alternate_verse_degrees TEXT");
+  } catch {
+    /* column already exists */
+  }
 }

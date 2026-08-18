@@ -15,6 +15,7 @@ export const songs = sqliteTable("songs", {
   verseDegrees: text("verse_degrees", { mode: "json" }).notNull().$type<string[]>(),
   chorusDegrees: text("chorus_degrees", { mode: "json" }).notNull().$type<string[]>(),
   bridgeDegrees: text("bridge_degrees", { mode: "json" }).$type<string[] | null>(),
+  alternateVerseDegrees: text("alternate_verse_degrees", { mode: "json" }).$type<string[] | null>(),
   createdAt: text("created_at").notNull(),
 });
 

@@ -15,6 +15,7 @@ export const createSongSchema = z.object({
   verseChords: z.string().trim().min(1),
   chorusChords: z.string().trim().min(1),
   bridgeChords: z.string().trim().nullish(),
+  alternateVerseChords: z.string().trim().nullish(),
 });
 
 /** Body schema for updating a song. All fields optional. */
