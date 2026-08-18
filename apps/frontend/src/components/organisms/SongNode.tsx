@@ -21,6 +21,9 @@ export function SongNode({ song, displayScale, index }: { song: Song; displaySca
       <div className="flex flex-col gap-2 border-t border-dust/60 pt-3">
         <ChordRow label="Verse" chords={transpose(song.verseDegrees, displayScale)} />
         <ChordRow label="Chorus" chords={transpose(song.chorusDegrees, displayScale)} />
+        {song.alternateVerseDegrees ? (
+          <ChordRow label="Alt Verse" chords={transpose(song.alternateVerseDegrees, displayScale)} />
+        ) : null}
         <ChordRow label="Bridge" chords={transpose(song.bridgeDegrees, displayScale)} />
       </div>
     </article>

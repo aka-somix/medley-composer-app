@@ -16,6 +16,7 @@ function song(overrides: Partial<Song>): Song {
     verseDegrees: ["1", "5", "6m", "4"],
     chorusDegrees: ["4", "1", "5", "6m"],
     bridgeDegrees: null,
+    alternateVerseDegrees: null,
     createdAt: "2026-08-17T00:00:00.000Z",
     ...overrides,
   };
@@ -57,5 +58,16 @@ describe("MedleyChain", () => {
     await user.click(pick);
 
     await waitFor(() => expect(onAppend).toHaveBeenCalledWith(next));
+  });
+
+  it("renders an alternate verse row when the song has one", () => {
+    renderWithProviders(
+      <MedleyChain
+        chain={[song({ alternateVerseDegrees: ["6m", "4", "1", "5"] })]}
+        displayScale="C"
+        onAppend={() => {}}
+      />,
+    );
+    expect(screen.getByText("Alt Verse")).toBeInTheDocument();
   });
 });
