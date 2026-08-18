@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
-import type { CreateSongInput } from "@medleys/shared";
+import type { CreateSongInput, Song } from "@medleys/shared";
 import { Button } from "../atoms/Button.js";
 import { Input } from "../atoms/Input.js";
 import { FormField } from "../molecules/FormField.js";
-import { useCreateSong } from "../../api/hooks.js";
+import { useCreateSong, useUpdateSong } from "../../api/hooks.js";
+import { transpose } from "../../lib/scales.js";
 
 const EMPTY: CreateSongInput = {
   title: "",
@@ -16,28 +17,63 @@ const EMPTY: CreateSongInput = {
   bridgeChords: "",
 };
 
-export function AddSongForm({ onCreated }: { onCreated?: () => void }) {
-  const [form, setForm] = useState<CreateSongInput>(EMPTY);
+/** Turn a stored song into editable form values (degrees → chords in its own scale). */
+function songToForm(song: Song): CreateSongInput {
+  return {
+    title: song.title,
+    artist: song.artist,
+    bpm: song.bpm,
+    scale: song.scale,
+    language: song.language,
+    verseChords: transpose(song.verseDegrees, song.scale).join(", "),
+    chorusChords: transpose(song.chorusDegrees, song.scale).join(", "),
+    bridgeChords: transpose(song.bridgeDegrees, song.scale).join(", "),
+  };
+}
+
+/**
+ * Create or edit a song. With no `song` it creates; with a `song` it pre-fills
+ * from that song and saves changes via PUT. Remount (via `key`) to switch songs.
+ */
+export function SongForm({
+  song,
+  onCreated,
+  onSaved,
+}: {
+  song?: Song;
+  onCreated?: () => void;
+  onSaved?: () => void;
+}) {
+  const editing = Boolean(song);
+  const [form, setForm] = useState<CreateSongInput>(song ? songToForm(song) : EMPTY);
   const createSong = useCreateSong();
+  const updateSong = useUpdateSong(song?.id ?? "");
+  const mutation = editing ? updateSong : createSong;
 
   const set = <K extends keyof CreateSongInput>(key: K, value: CreateSongInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    createSong.mutate(
-      { ...form, bridgeChords: form.bridgeChords?.trim() ? form.bridgeChords : null },
-      {
-        onSuccess: () => {
+    const body = { ...form, bridgeChords: form.bridgeChords?.trim() ? form.bridgeChords : null };
+    mutation.mutate(body, {
+      onSuccess: () => {
+        if (editing) {
+          onSaved?.();
+        } else {
           setForm(EMPTY);
           onCreated?.();
-        },
+        }
       },
-    );
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-label="Add song">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4"
+      aria-label={editing ? "Edit song" : "Add song"}
+    >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField label="Title" htmlFor="title">
           <Input id="title" required value={form.title} onChange={(e) => set("title", e.target.value)} />
@@ -78,16 +114,24 @@ export function AddSongForm({ onCreated }: { onCreated?: () => void }) {
         />
       </FormField>
 
-      {createSong.isError ? (
+      {mutation.isError ? (
         <p className="text-sm text-rust" role="alert">
-          {(createSong.error as Error).message}
+          {(mutation.error as Error).message}
         </p>
       ) : null}
-      {createSong.isSuccess ? <p className="text-sm text-teal">Song added.</p> : null}
+      {mutation.isSuccess ? (
+        <p className="text-sm text-teal">{editing ? "Changes saved." : "Song added."}</p>
+      ) : null}
 
       <div>
-        <Button type="submit" disabled={createSong.isPending}>
-          {createSong.isPending ? "Adding…" : "Add song"}
+        <Button type="submit" disabled={mutation.isPending}>
+          {editing
+            ? mutation.isPending
+              ? "Saving…"
+              : "Save changes"
+            : mutation.isPending
+              ? "Adding…"
+              : "Add song"}
         </Button>
       </div>
     </form>

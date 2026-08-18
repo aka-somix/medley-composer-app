@@ -29,5 +29,7 @@ export const api = {
   getSong: (id: string) => request<Song>(`/api/songs/${id}`),
   createSong: (input: CreateSongInput) =>
     request<Song>(`/api/songs`, { method: "POST", body: JSON.stringify(input) }),
+  updateSong: (id: string, input: CreateSongInput) =>
+    request<Song>(`/api/songs/${id}`, { method: "PUT", body: JSON.stringify(input) }),
   getSuggestions: (id: string) => request<Suggestion[]>(`/api/songs/${id}/suggestions`),
 };

@@ -15,15 +15,17 @@ export function SearchPage() {
         <p className="mt-2 text-sepia/80">Search a song, then chain compatible tracks by their chord progressions.</p>
       </div>
 
-      <Input
-        type="search"
-        placeholder="Search by title…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        aria-label="Search songs by title"
-        className="text-lg"
-        autoFocus
-      />
+      <div className="mx-auto w-full max-w-md">
+        <Input
+          type="search"
+          placeholder="Search by title…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          aria-label="Search songs by title"
+          className="text-lg"
+          autoFocus
+        />
+      </div>
 
       <div className="flex flex-col gap-3">
         {isLoading ? <Spinner label="Searching…" /> : null}

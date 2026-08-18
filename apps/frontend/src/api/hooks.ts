@@ -42,3 +42,13 @@ export function useCreateSong() {
     },
   });
 }
+
+export function useUpdateSong(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateSongInput) => api.updateSong(id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["songs"] });
+    },
+  });
+}
