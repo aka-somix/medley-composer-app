@@ -84,6 +84,8 @@ describe("GET /api/songs/:id/suggestions", () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].song.title).toBe("Match");
+    expect(res.body[0].bestMatch.target).toBe("verse");
+    expect(res.body[0]).not.toHaveProperty("verseSimilarity");
   });
 });
 

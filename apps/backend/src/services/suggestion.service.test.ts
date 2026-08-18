@@ -1,6 +1,7 @@
 import { beforeEach, describe, it, expect } from "vitest";
 import { createContainer, type Container } from "../container.js";
 import type { CreateSongBody } from "../validation.js";
+import { COMPATIBILITY_THRESHOLD } from "@medleys/shared";
 
 let seq = 0;
 function makeContainer(): Container {
@@ -27,9 +28,9 @@ describe("SuggestionService", () => {
     container = makeContainer();
   });
 
-  it("returns only songs with >=70% verse or chorus similarity", async () => {
+  it("returns only songs scoring at or above the compatibility threshold", async () => {
     const target = await container.songService.create({ ...base, title: "Target" });
-    // Same shape in a different key => identical degrees => compatible.
+    // Same verse shape in another key => identical degrees => verse->verse = 1.
     await container.songService.create({
       ...base,
       title: "Match",
@@ -37,31 +38,48 @@ describe("SuggestionService", () => {
       verseChords: "G, D, Em, C",
       chorusChords: "C, G, D, Em",
     });
-    // Totally different progression => not compatible.
+    // Different verse AND chorus => below threshold on every rule.
     await container.songService.create({
       ...base,
       title: "NoMatch",
       verseChords: "Cmaj7, Dm7, Em7, Fmaj7",
-      chorusChords: "Dm7, G7, Cmaj7, Am7",
+      chorusChords: "Dm7, Em7, Fmaj7, G7",
     });
 
     const suggestions = await container.suggestionService.getSuggestions(target.id);
     expect(suggestions.map((s) => s.song.title)).toEqual(["Match"]);
-    expect(suggestions[0]!.score).toBeGreaterThanOrEqual(0.7);
+    expect(suggestions[0]!.score).toBeGreaterThanOrEqual(COMPATIBILITY_THRESHOLD);
+    expect(suggestions[0]!.bestMatch).toEqual({ source: "verse", target: "verse", similarity: 1 });
   });
 
-  it("qualifies a candidate on chorus similarity alone", async () => {
+  it("qualifies a candidate whose chorus matches the target verse (cross-section)", async () => {
     const target = await container.songService.create({ ...base, title: "Target" });
     await container.songService.create({
       ...base,
-      title: "ChorusOnly",
-      verseChords: "C, Dm, Em, F", // different verse (1,2m,3m,4)
-      chorusChords: "F, C, G, Am", // identical chorus
+      title: "ChorusMatch",
+      verseChords: "Cmaj7, Dm7, Em7, Fmaj7", // unrelated verse
+      chorusChords: "C, G, Am, F", // == target verse degrees [1,5,6m,4]
     });
 
     const suggestions = await container.suggestionService.getSuggestions(target.id);
-    expect(suggestions.map((s) => s.song.title)).toEqual(["ChorusOnly"]);
-    expect(suggestions[0]!.chorusSimilarity).toBe(1);
+    expect(suggestions.map((s) => s.song.title)).toEqual(["ChorusMatch"]);
+    expect(suggestions[0]!.bestMatch.target).toBe("chorus");
+    expect(suggestions[0]!.score).toBe(1);
+  });
+
+  it("qualifies a candidate whose alternate verse matches the target verse", async () => {
+    const target = await container.songService.create({ ...base, title: "Target" });
+    await container.songService.create({
+      ...base,
+      title: "AltMatch",
+      verseChords: "Cmaj7, Dm7, Em7, Fmaj7",
+      chorusChords: "Dm7, Em7, Fmaj7, G7",
+      alternateVerseChords: "C, G, Am, F", // == target verse
+    });
+
+    const suggestions = await container.suggestionService.getSuggestions(target.id);
+    expect(suggestions.map((s) => s.song.title)).toEqual(["AltMatch"]);
+    expect(suggestions[0]!.bestMatch.target).toBe("alternateVerse");
   });
 
   it("ranks by BPM, then scale, then language", async () => {
@@ -72,15 +90,12 @@ describe("SuggestionService", () => {
       scale: "C",
       language: "English",
     });
-    // All compatible (same degree shape via different keys/BPMs).
     await container.songService.create({
       ...base,
       title: "FarBpm",
       bpm: 150,
       scale: "C",
       language: "English",
-      verseChords: "C, G, Am, F",
-      chorusChords: "F, C, G, Am",
     });
     await container.songService.create({
       ...base,
@@ -97,13 +112,9 @@ describe("SuggestionService", () => {
       bpm: 122,
       scale: "C",
       language: "French",
-      verseChords: "C, G, Am, F",
-      chorusChords: "F, C, G, Am",
     });
 
     const suggestions = await container.suggestionService.getSuggestions(target.id);
-    // 121 and 122 both beat 150; among them same-scale (C) wins the scale tiebreak
-    // despite being 1 BPM further, because BPM is compared first: 121 < 122.
     expect(suggestions.map((s) => s.song.title)).toEqual([
       "CloseBpmOtherScale",
       "CloseBpmSameScale",

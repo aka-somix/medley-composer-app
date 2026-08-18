@@ -1,6 +1,6 @@
 import {
   COMPATIBILITY_THRESHOLD,
-  progressionSimilarity,
+  evaluateMatch,
   type Song,
   type Suggestion,
 } from "@medleys/shared";
@@ -10,9 +10,10 @@ import { NotFoundError } from "../http/errors.js";
 /**
  * Finds songs compatible with a target song for medley chaining.
  *
- * A candidate is compatible when its verse OR chorus degree progression is at
- * least COMPATIBILITY_THRESHOLD similar to the target's corresponding section
- * (verse-vs-verse, chorus-vs-chorus). Survivors are ranked by, in order:
+ * Compatibility is decided by ACTIVE_MATCH_RULES (see @medleys/shared): a
+ * candidate's score is the best similarity across the active section-comparison
+ * rules, and bestMatch records which section pair won. Survivors (score >=
+ * COMPATIBILITY_THRESHOLD) are ranked by, in order:
  *   1. closest BPM (highest priority)
  *   2. same music scale
  *   3. same language (lowest priority)
@@ -36,14 +37,8 @@ export class SuggestionService {
   }
 
   private score(target: Song, candidate: Song): Suggestion {
-    const verseSimilarity = progressionSimilarity(target.verseDegrees, candidate.verseDegrees);
-    const chorusSimilarity = progressionSimilarity(target.chorusDegrees, candidate.chorusDegrees);
-    return {
-      song: candidate,
-      verseSimilarity,
-      chorusSimilarity,
-      score: Math.max(verseSimilarity, chorusSimilarity),
-    };
+    const { best, matches } = evaluateMatch(target, candidate);
+    return { song: candidate, score: best.similarity, bestMatch: best, matches };
   }
 
   private compare(target: Song, a: Suggestion, b: Suggestion): number {
