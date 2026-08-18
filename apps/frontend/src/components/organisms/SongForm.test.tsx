@@ -15,6 +15,7 @@ const SONG: Song = {
   verseDegrees: ["1", "5", "6m", "4"],
   chorusDegrees: ["4", "1", "5", "6m"],
   bridgeDegrees: null,
+  alternateVerseDegrees: null,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
@@ -48,6 +49,7 @@ describe("SongForm", () => {
       verseChords: "C, G, Am, F",
       chorusChords: "F, C, G, Am",
       bridgeChords: null,
+      alternateVerseChords: null,
     });
     await screen.findByText("Song added.");
   });
@@ -67,6 +69,7 @@ describe("SongForm", () => {
     expect(screen.getByLabelText("Verse chords")).toHaveValue("C, G, Am, F");
     expect(screen.getByLabelText("Chorus chords")).toHaveValue("F, C, G, Am");
     expect(screen.getByLabelText("Bridge chords (optional)")).toHaveValue("");
+    expect(screen.getByLabelText("Alt Verse chords (optional)")).toHaveValue("");
 
     await user.clear(screen.getByLabelText("Title"));
     await user.type(screen.getByLabelText("Title"), "Cream Sky (Live)");
@@ -83,5 +86,28 @@ describe("SongForm", () => {
       verseChords: "C, G, Am, F",
       chorusChords: "F, C, G, Am",
     });
+  });
+
+  it("submits an alternate verse when provided", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: "new" }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<SongForm />);
+
+    await user.type(screen.getByLabelText("Title"), "Alt Song");
+    await user.type(screen.getByLabelText("Artist"), "A");
+    await user.type(screen.getByLabelText("Verse chords"), "C, G, Am, F");
+    await user.type(screen.getByLabelText("Chorus chords"), "F, C, G, Am");
+    await user.type(screen.getByLabelText("Alt Verse chords (optional)"), "Am, F, C, G");
+    await user.click(screen.getByRole("button", { name: /add song/i }));
+
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
+    const [, init] = fetchSpy.mock.calls[0]!;
+    const body = JSON.parse(String((init as RequestInit).body));
+    expect(body.alternateVerseChords).toBe("Am, F, C, G");
   });
 });

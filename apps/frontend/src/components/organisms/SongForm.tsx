@@ -15,6 +15,7 @@ const EMPTY: CreateSongInput = {
   verseChords: "",
   chorusChords: "",
   bridgeChords: "",
+  alternateVerseChords: "",
 };
 
 /** Turn a stored song into editable form values (degrees → chords in its own scale). */
@@ -28,6 +29,7 @@ function songToForm(song: Song): CreateSongInput {
     verseChords: transpose(song.verseDegrees, song.scale).join(", "),
     chorusChords: transpose(song.chorusDegrees, song.scale).join(", "),
     bridgeChords: transpose(song.bridgeDegrees, song.scale).join(", "),
+    alternateVerseChords: transpose(song.alternateVerseDegrees, song.scale).join(", "),
   };
 }
 
@@ -55,7 +57,11 @@ export function SongForm({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const body = { ...form, bridgeChords: form.bridgeChords?.trim() ? form.bridgeChords : null };
+    const body = {
+      ...form,
+      bridgeChords: form.bridgeChords?.trim() ? form.bridgeChords : null,
+      alternateVerseChords: form.alternateVerseChords?.trim() ? form.alternateVerseChords : null,
+    };
     mutation.mutate(body, {
       onSuccess: () => {
         if (editing) {
@@ -111,6 +117,13 @@ export function SongForm({
           id="bridge"
           value={form.bridgeChords ?? ""}
           onChange={(e) => set("bridgeChords", e.target.value)}
+        />
+      </FormField>
+      <FormField label="Alt Verse chords (optional)" htmlFor="altVerse">
+        <Input
+          id="altVerse"
+          value={form.alternateVerseChords ?? ""}
+          onChange={(e) => set("alternateVerseChords", e.target.value)}
         />
       </FormField>
 
