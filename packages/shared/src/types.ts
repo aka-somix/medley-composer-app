@@ -12,6 +12,23 @@ export type DegreeToken = string;
 /** A degree progression: an ordered list of degree tokens. */
 export type DegreeProgression = DegreeToken[];
 
+/** A named section of a song, used by the matching rules. */
+export type SongSection = "verse" | "chorus" | "bridge" | "alternateVerse";
+
+/** One matching rule: compare the source song's `source` section against the candidate's `target` section. */
+export interface ComparisonRule {
+  source: SongSection;
+  target: SongSection;
+}
+
+/** The result of one comparison rule for a candidate. */
+export interface SectionMatch {
+  source: SongSection;
+  target: SongSection;
+  /** Normalized similarity in [0,1]. */
+  similarity: number;
+}
+
 /** Compatibility threshold: two progressions are "close" at or above this. */
 export const COMPATIBILITY_THRESHOLD = 0.5;
 
@@ -28,6 +45,7 @@ export interface Song {
   verseDegrees: DegreeProgression;
   chorusDegrees: DegreeProgression;
   bridgeDegrees: DegreeProgression | null;
+  alternateVerseDegrees: DegreeProgression | null;
   createdAt: string;
 }
 
@@ -44,15 +62,18 @@ export interface CreateSongInput {
   verseChords: string;
   chorusChords: string;
   bridgeChords?: string | null;
+  alternateVerseChords?: string | null;
 }
 
-/** A single suggested next song, with the similarity scores that qualified it. */
+/** A single suggested next song plus which section pair qualified it. */
 export interface Suggestion {
   song: Song;
-  verseSimilarity: number;
-  chorusSimilarity: number;
-  /** max(verseSimilarity, chorusSimilarity) — the value the threshold is applied to. */
+  /** = bestMatch.similarity; COMPATIBILITY_THRESHOLD is applied to this. */
   score: number;
+  /** The winning comparison rule — drives the UI "matching part" chip. */
+  bestMatch: SectionMatch;
+  /** Every evaluated rule, in rule order (detail / future use). */
+  matches: SectionMatch[];
 }
 
 /** Generic paginated envelope. */
