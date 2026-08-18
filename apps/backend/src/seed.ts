@@ -12,6 +12,7 @@ const SEED_SONGS: CreateSongBody[] = [
     verseChords: "C, G, Am, F",
     chorusChords: "F, C, G, Am",
     bridgeChords: "Dm, Em, F, G",
+    alternateVerseChords: "Am, F, C, G",
   },
   {
     title: "Velvet Morning",
@@ -22,6 +23,7 @@ const SEED_SONGS: CreateSongBody[] = [
     verseChords: "G, D, Em, C",
     chorusChords: "C, G, D, Em",
     bridgeChords: null,
+    alternateVerseChords: "Em, C, G, D",
   },
   {
     title: "Blue Static",
