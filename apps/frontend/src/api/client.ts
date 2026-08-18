@@ -1,4 +1,10 @@
-import type { CreateSongInput, Paginated, Song, Suggestion } from "@medleys/shared";
+import type {
+  BatchImportResult,
+  CreateSongInput,
+  Paginated,
+  Song,
+  Suggestion,
+} from "@medleys/shared";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
@@ -31,5 +37,10 @@ export const api = {
     request<Song>(`/api/songs`, { method: "POST", body: JSON.stringify(input) }),
   updateSong: (id: string, input: CreateSongInput) =>
     request<Song>(`/api/songs/${id}`, { method: "PUT", body: JSON.stringify(input) }),
+  importSongs: (songs: CreateSongInput[]) =>
+    request<BatchImportResult>(`/api/songs/batch`, {
+      method: "POST",
+      body: JSON.stringify({ songs }),
+    }),
   getSuggestions: (id: string) => request<Suggestion[]>(`/api/songs/${id}/suggestions`),
 };

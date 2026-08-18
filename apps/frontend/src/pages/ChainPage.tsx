@@ -23,6 +23,7 @@ export function ChainPage() {
   }, [startSong]);
 
   const append = (song: Song) => setChain((prev) => [...prev, song]);
+  const removeLast = () => setChain((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
   const reset = () => (startSong ? setChain([startSong]) : undefined);
 
   if (isLoading) return <Spinner label="Loading song…" />;
@@ -52,7 +53,7 @@ export function ChainPage() {
         <span className="font-mono text-amber">+</span> to extend from the last song.
       </p>
 
-      <MedleyChain chain={chain} displayScale={displayScale} onAppend={append} />
+      <MedleyChain chain={chain} displayScale={displayScale} onAppend={append} onRemoveLast={removeLast} />
 
       <div>
         <Link to="/" className="text-sm text-teal underline-offset-2 hover:underline">

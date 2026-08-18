@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Song, Suggestion } from "@medleys/shared";
 import { MedleyChain } from "./MedleyChain.js";
@@ -92,5 +92,86 @@ describe("MedleyChain", () => {
       />,
     );
     expect(screen.getByText("Alt Verse")).toBeInTheDocument();
+  });
+
+  it("has no remove button when only the starting song is in the chain", () => {
+    renderWithProviders(
+      <MedleyChain chain={[song({})]} displayScale="C" onAppend={() => {}} onRemoveLast={() => {}} />,
+    );
+    expect(screen.queryByRole("button", { name: /Remove .* from the chain/ })).not.toBeInTheDocument();
+  });
+
+  it("shows a remove button only on the last song, not the origin", () => {
+    const start = song({ id: "s1", title: "Start" });
+    const next = song({ id: "s2", title: "Next Up" });
+    renderWithProviders(
+      <MedleyChain chain={[start, next]} displayScale="C" onAppend={() => {}} onRemoveLast={() => {}} />,
+    );
+    expect(screen.getByRole("button", { name: "Remove Next Up from the chain" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Remove Start from the chain" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("wraps nodes into a boustrophedon grid once the container width is measured", () => {
+    // Capture the ResizeObserver callback so we can drive a measurement pass.
+    let trigger: (() => void) | undefined;
+    class ResizeObserverMock {
+      constructor(private cb: () => void) {
+        trigger = cb;
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+
+    const chain = Array.from({ length: 6 }, (_, i) => song({ id: `s${i}`, title: `Song ${i}` }));
+    const { container } = renderWithProviders(
+      <MedleyChain chain={chain} displayScale="C" onAppend={() => {}} />,
+    );
+
+    const node = (i: number) => container.querySelector<HTMLElement>(`[data-node-index="${i}"]`)!;
+    // Before measurement everything stacks in a single column (graceful fallback).
+    expect(node(0).style.gridColumn).toBe("1");
+    expect(node(1).style.gridColumn).toBe("1");
+
+    // Stub layout: a container wide enough for exactly 2 cards per row (320px cards).
+    const chainEl = screen.getByTestId("chain");
+    Object.defineProperty(chainEl, "clientWidth", { value: 1000, configurable: true });
+    node(0).getBoundingClientRect = () => ({ width: 320 }) as DOMRect;
+
+    act(() => trigger?.());
+
+    // perRow = 2. Even row reads left→right (cols 1,2); the next row reverses (cols 2,1),
+    // so the chain turns down on the right and reads back left — a continuous snake.
+    expect(node(0).style.gridColumn).toBe("1"); // row 0, pos 0
+    expect(node(1).style.gridColumn).toBe("2"); // row 0, pos 1
+    expect(node(2).style.gridColumn).toBe("2"); // row 1, pos 0 (reversed → right)
+    expect(node(3).style.gridColumn).toBe("1"); // row 1, pos 1 (reversed → left)
+    expect(node(0).style.gridRow).toBe("1");
+    expect(node(2).style.gridRow).toBe("2");
+    // Nothing is dropped when wrapping — every song is still rendered.
+    for (let i = 0; i < 6; i++) {
+      expect(screen.getByText(`Song ${i}`)).toBeInTheDocument();
+    }
+  });
+
+  it("calls onRemoveLast when the last song's remove button is clicked", async () => {
+    const start = song({ id: "s1", title: "Start" });
+    const next = song({ id: "s2", title: "Next Up" });
+    const onRemoveLast = vi.fn();
+    const user = userEvent.setup();
+    renderWithProviders(
+      <MedleyChain
+        chain={[start, next]}
+        displayScale="C"
+        onAppend={() => {}}
+        onRemoveLast={onRemoveLast}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Remove Next Up from the chain" }));
+    expect(onRemoveLast).toHaveBeenCalledTimes(1);
   });
 });

@@ -4,9 +4,30 @@ import { Tag } from "../atoms/Tag.js";
 import { transpose } from "../../lib/scales.js";
 
 /** A single node in the medley chain, with chords transposed to the display scale. */
-export function SongNode({ song, displayScale, index }: { song: Song; displayScale: string; index: number }) {
+export function SongNode({
+  song,
+  displayScale,
+  index,
+  onRemove,
+}: {
+  song: Song;
+  displayScale: string;
+  index: number;
+  /** When provided, renders an ✕ that removes this song from the chain. */
+  onRemove?: () => void;
+}) {
   return (
-    <article className="flex w-72 shrink-0 flex-col gap-3 rounded-2xl border border-dust bg-cream/80 p-5 shadow-vinyl sm:w-80">
+    <article className="relative flex w-72 shrink-0 flex-col gap-3 rounded-2xl border border-dust bg-cream/80 p-5 shadow-vinyl sm:w-80">
+      {onRemove ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove ${song.title} from the chain`}
+          className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-dust bg-cream text-sm text-sepia/70 shadow-vinyl transition-colors hover:border-rust hover:text-rust"
+        >
+          ✕
+        </button>
+      ) : null}
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <span className="text-xs font-semibold uppercase tracking-wider text-mustard">#{index + 1}</span>

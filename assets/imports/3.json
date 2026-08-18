@@ -1,0 +1,57 @@
+[
+  {
+    "title": "Marmellata #25",
+    "artist": "Cremonini",
+    "bpm": 120,
+    "scale": "D",
+    "language": "Italian",
+    "verseChords": "D, G",
+    "chorusChords": "G, F#m, D, Bm, Em",
+    "bridgeChords": "D, A, G",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Stavo Pensando a Te",
+    "artist": "Mobrici, Fulminacci",
+    "bpm": 78,
+    "scale": "G",
+    "language": "Italian",
+    "verseChords": "G, Bm, A, F#m",
+    "chorusChords": "Bm, F#m, G, A, D",
+    "bridgeChords": "G, F#m, Bm",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Solo 3 min",
+    "artist": "Negramaro",
+    "bpm": 143,
+    "scale": "E",
+    "language": "Italian",
+    "verseChords": "A, E, C#m, B",
+    "chorusChords": "E, B, F#m, A",
+    "bridgeChords": "B, C#m, F#m, A",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Per Dimenticare",
+    "artist": "Zero Assoluto",
+    "bpm": 167,
+    "scale": "B",
+    "language": "Italian",
+    "verseChords": "B, D#m, G#m, E",
+    "chorusChords": "B, F#, G#m, E, D#m, D",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Oroscopo",
+    "artist": "Calcutta",
+    "bpm": 82,
+    "scale": "Bm",
+    "language": "Italian",
+    "verseChords": "Bm, F#m, Em",
+    "chorusChords": "Bm, A, Em, G",
+    "bridgeChords": "D, F#m, Em",
+    "alternateVerseChords": null
+  }
+]

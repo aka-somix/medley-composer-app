@@ -5,6 +5,7 @@ import { Button } from "../components/atoms/Button.js";
 import { SongCard } from "../components/molecules/SongCard.js";
 import { Pagination } from "../components/molecules/Pagination.js";
 import { SongForm } from "../components/organisms/SongForm.js";
+import { SongImport } from "../components/organisms/SongImport.js";
 import { useSongList } from "../api/hooks.js";
 
 const PAGE_SIZE = 8;
@@ -54,6 +55,9 @@ export function SongsPage() {
         ) : (
           <>
             <h2 className="mb-4 font-display text-2xl">Add a song</h2>
+            <div className="mb-6 border-b border-dust pb-6">
+              <SongImport onImported={() => setPage(1)} />
+            </div>
             <SongForm onCreated={() => setPage(1)} />
           </>
         )}

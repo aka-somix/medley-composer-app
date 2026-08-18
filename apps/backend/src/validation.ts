@@ -21,6 +21,15 @@ export const createSongSchema = z.object({
 /** Body schema for updating a song. All fields optional. */
 export const updateSongSchema = createSongSchema.partial();
 
+/**
+ * Envelope for a batch import. The envelope only guarantees a bounded, non-empty
+ * array — each row is validated per-row in the service so one bad row does not
+ * reject the whole upload (best-effort import).
+ */
+export const batchImportSchema = z.object({
+  songs: z.array(z.unknown()).min(1).max(200),
+});
+
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),
@@ -32,3 +41,4 @@ export const searchQuerySchema = z.object({
 
 export type CreateSongBody = z.infer<typeof createSongSchema>;
 export type UpdateSongBody = z.infer<typeof updateSongSchema>;
+export type BatchImportBody = z.infer<typeof batchImportSchema>;

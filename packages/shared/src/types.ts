@@ -83,3 +83,20 @@ export interface Paginated<T> {
   page: number;
   pageSize: number;
 }
+
+/** One row that could not be imported during a batch import. */
+export interface BatchImportError {
+  /** 1-based position of the offending row in the uploaded array. */
+  row: number;
+  message: string;
+}
+
+/**
+ * Result of a best-effort batch import: every valid row is created, and each
+ * invalid row is skipped and reported. `created` and `errors` together account
+ * for the whole uploaded array.
+ */
+export interface BatchImportResult {
+  created: Song[];
+  errors: BatchImportError[];
+}

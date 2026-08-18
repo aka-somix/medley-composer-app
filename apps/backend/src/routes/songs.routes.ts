@@ -8,6 +8,7 @@ export function createSongsRouter(controller: SongsController): Router {
 
   router.get("/search", asyncHandler(controller.search));
   router.get("/", asyncHandler(controller.list));
+  router.post("/batch", asyncHandler(controller.batchImport));
   router.post("/", asyncHandler(controller.create));
   router.get("/:id/suggestions", asyncHandler(controller.suggestions));
   router.get("/:id", asyncHandler(controller.get));

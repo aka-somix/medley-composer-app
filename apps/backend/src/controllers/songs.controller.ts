@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { SongService } from "../services/song.service.js";
 import type { SuggestionService } from "../services/suggestion.service.js";
 import {
+  batchImportSchema,
   createSongSchema,
   listQuerySchema,
   searchQuerySchema,
@@ -37,6 +38,12 @@ export class SongsController {
     const body = createSongSchema.parse(req.body);
     const song = await this.songService.create(body);
     res.status(201).json(song);
+  };
+
+  batchImport = async (req: Request, res: Response): Promise<void> => {
+    const { songs } = batchImportSchema.parse(req.body);
+    const result = await this.songService.createMany(songs);
+    res.status(201).json(result);
   };
 
   update = async (req: Request, res: Response): Promise<void> => {

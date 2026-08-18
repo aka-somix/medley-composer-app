@@ -38,6 +38,18 @@ export class DrizzleSongRepository implements SongRepository {
     return row ? toSong(row) : null;
   }
 
+  async findByTitleAndArtist(title: string, artist: string): Promise<Song | null> {
+    const row = this.db
+      .select()
+      .from(songs)
+      .where(
+        sql`lower(trim(${songs.title})) = ${title.trim().toLowerCase()}
+          and lower(trim(${songs.artist})) = ${artist.trim().toLowerCase()}`,
+      )
+      .get();
+    return row ? toSong(row) : null;
+  }
+
   async findAll(): Promise<Song[]> {
     const rows = this.db.select().from(songs).orderBy(desc(songs.createdAt)).all();
     return rows.map(toSong);

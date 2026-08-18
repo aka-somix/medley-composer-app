@@ -51,3 +51,6 @@ Standards for the Express + Drizzle REST API. Follow these without being asked.
 ## Style
 - ESM everywhere; import local files with the `.js` extension. `strict` TS, no
   `any`. Small, single-purpose files.
+
+## Rules
+- Treat medleys.sqlite as a production DB. Don't delete it or change its schema without a migration.

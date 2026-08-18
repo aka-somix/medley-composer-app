@@ -8,6 +8,8 @@ import type { Song } from "@medleys/shared";
 export interface SongRepository {
   create(song: Song): Promise<Song>;
   findById(id: string): Promise<Song | null>;
+  /** Find a song by title + artist, compared case-insensitively and trimmed. */
+  findByTitleAndArtist(title: string, artist: string): Promise<Song | null>;
   findAll(): Promise<Song[]>;
   list(page: number, pageSize: number): Promise<{ items: Song[]; total: number }>;
   searchByTitle(query: string): Promise<Song[]>;

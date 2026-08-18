@@ -52,3 +52,13 @@ export function useUpdateSong(id: string) {
     },
   });
 }
+
+export function useImportSongs() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (songs: CreateSongInput[]) => api.importSongs(songs),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["songs"] });
+    },
+  });
+}

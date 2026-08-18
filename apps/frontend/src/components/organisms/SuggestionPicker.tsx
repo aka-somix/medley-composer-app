@@ -31,8 +31,7 @@ export function SuggestionPicker({
   const suggestions = (data ?? []).filter((s) => !excludeIds.includes(s.song.id));
 
   return (
-    <div className="flex shrink-0 items-start gap-4 self-stretch pt-16">
-      <div className="mt-2 h-px w-8 shrink-0 bg-dust sm:w-12" aria-hidden />
+    <div className="flex shrink-0">
       {!open ? (
         <button
           type="button"

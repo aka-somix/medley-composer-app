@@ -1,0 +1,68 @@
+[
+  {
+    "title": "Manzarek",
+    "artist": "Canova",
+    "bpm": 115,
+    "scale": "G",
+    "language": "Italian",
+    "verseChords": "G, G7, C, Am, D7",
+    "chorusChords": "G, Bm, C, Am, D7",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Go Flex",
+    "artist": "Post Malone",
+    "bpm": 81,
+    "scale": "F",
+    "language": "English",
+    "verseChords": "Bb, F, C, Dm",
+    "chorusChords": "Am, Bb, F, C",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Chemical",
+    "artist": "Post Malone",
+    "bpm": 85,
+    "scale": "D",
+    "language": "English",
+    "verseChords": "D, Em, G",
+    "chorusChords": "D, Em, G, Bm, A",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Heat Waves",
+    "artist": "Glass Animals",
+    "bpm": 81,
+    "scale": "B",
+    "language": "English",
+    "verseChords": "C#m, B, G#m, F#",
+    "chorusChords": "C#m, B, G#m, F#, E, B",
+    "bridgeChords": "E, F#, G#m, B",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Stupida Sfortuna",
+    "artist": "Fulminacci",
+    "bpm": 94,
+    "scale": "D",
+    "language": "Italian",
+    "verseChords": "GM7, Em7, Am7, D, Bm7",
+    "chorusChords": "G, Em, Am7, D, Bm, Em7",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Tommaso",
+    "artist": "Fulminacci",
+    "bpm": 75,
+    "scale": "G",
+    "language": "Italian",
+    "verseChords": "Em, C, G, D",
+    "chorusChords": "G, G7, C, Cm, Dm, Bb",
+    "bridgeChords": "Am7, Gm7, D7",
+    "alternateVerseChords": null
+  }
+]

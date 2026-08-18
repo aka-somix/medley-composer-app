@@ -1,0 +1,134 @@
+[
+  {
+    "title": "Pesto",
+    "artist": "Calcutta",
+    "bpm": 81,
+    "scale": "B",
+    "language": "Italian",
+    "verseChords": "G#m, E, D#m, C#",
+    "chorusChords": "Em, B, C#m, A",
+    "bridgeChords": "B, C#m, EM7, C#m",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Riptide",
+    "artist": "Vance Joy",
+    "bpm": 102,
+    "scale": "C",
+    "language": "English",
+    "verseChords": "Am, G, C",
+    "chorusChords": "Am, G, C",
+    "bridgeChords": "Am, G, C, FM7",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "I Pomeriggi",
+    "artist": "Giorgio Poi",
+    "bpm": 118,
+    "scale": "C",
+    "language": "Italian",
+    "verseChords": "Am, G, F, G",
+    "chorusChords": "G, Am, G, F, G, Am, G, F, G",
+    "bridgeChords": "F, G",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Closer",
+    "artist": "The Chainsmokers",
+    "bpm": 95,
+    "scale": "Ab",
+    "language": "English",
+    "verseChords": "Db, Eb, Fm, Eb",
+    "chorusChords": "Db, Fm, Eb",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Paris",
+    "artist": "The Chainsmokers",
+    "bpm": 100,
+    "scale": "D",
+    "language": "English",
+    "verseChords": "G, Bm, A, F#m",
+    "chorusChords": "G, Bm, A, F#m",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Creep",
+    "artist": "Radiohead",
+    "bpm": 92,
+    "scale": "G",
+    "language": "English",
+    "verseChords": "G, B, C, Cm",
+    "chorusChords": "G, B, C, Cm",
+    "bridgeChords": "G, B, C, Cm",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Save Your Tears",
+    "artist": "The Weeknd",
+    "bpm": 118,
+    "scale": "C",
+    "language": "English",
+    "verseChords": "C, Am, Em, G",
+    "chorusChords": "Am, Em, G, C",
+    "bridgeChords": "Dm, Am, F, G",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Blinding Lights",
+    "artist": "The Weeknd",
+    "bpm": 171,
+    "scale": "Eb",
+    "language": "English",
+    "verseChords": "Cm, Eb, Bb, Fm",
+    "chorusChords": "Fm, Ab, Eb, Bb",
+    "bridgeChords": "Fm, Cm, Eb, Bb",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Someone You Loved",
+    "artist": "Lewis Capaldi",
+    "bpm": 110,
+    "scale": "Db",
+    "language": "English",
+    "verseChords": "Db, Ab, Bbm, Gb",
+    "chorusChords": "Db, Ab, Bbm, Gb",
+    "bridgeChords": "Ebm, Bbm, Ab",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Stolen Dance",
+    "artist": "Milky Chance",
+    "bpm": 114,
+    "scale": "B",
+    "language": "English",
+    "verseChords": "G#m, F#, E, B, D#",
+    "chorusChords": "D#, B, G#m, F#, E",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Nelle Tue Piscine",
+    "artist": "Giorgio Poi",
+    "bpm": 94,
+    "scale": "G",
+    "language": "Italian",
+    "verseChords": "G, Em7, C, Am, D",
+    "chorusChords": "G, Em7, C, Am, D",
+    "bridgeChords": null,
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Goodbye Kiss",
+    "artist": "Kasabian",
+    "bpm": 125,
+    "scale": "G",
+    "language": "English",
+    "verseChords": "G, C, G, C, G",
+    "chorusChords": "G, Em, C, D",
+    "bridgeChords": "Am, F, Am, F, D, Dm",
+    "alternateVerseChords": null
+  }
+]

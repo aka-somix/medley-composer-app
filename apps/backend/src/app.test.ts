@@ -48,6 +48,30 @@ describe("POST /api/songs", () => {
   });
 });
 
+describe("POST /api/songs/batch", () => {
+  it("imports valid rows, skips bad ones, and returns 201 with results", async () => {
+    const res = await request(app)
+      .post("/api/songs/batch")
+      .send({
+        songs: [
+          { ...validBody, title: "First" },
+          { ...validBody, title: "Bad", verseChords: "C, Zork, F" },
+          { ...validBody, title: "Second" },
+        ],
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.created.map((s: { title: string }) => s.title)).toEqual(["First", "Second"]);
+    expect(res.body.errors).toHaveLength(1);
+    expect(res.body.errors[0].row).toBe(2);
+  });
+
+  it("rejects an empty songs array with 400", async () => {
+    const res = await request(app).post("/api/songs/batch").send({ songs: [] });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("GET /api/songs", () => {
   it("paginates", async () => {
     await request(app).post("/api/songs").send({ ...validBody, title: "One" });

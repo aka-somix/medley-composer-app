@@ -1,11 +1,12 @@
 import {
   chordsToDegrees,
   parseProgression,
+  type BatchImportResult,
   type Paginated,
   type Song,
 } from "@medleys/shared";
 import type { SongRepository } from "../repositories/song.repository.js";
-import type { CreateSongBody, UpdateSongBody } from "../validation.js";
+import { createSongSchema, type CreateSongBody, type UpdateSongBody } from "../validation.js";
 import { NotFoundError } from "../http/errors.js";
 
 /** Injected side-effect providers, so the service stays deterministic in tests. */
@@ -43,6 +44,56 @@ export class SongService {
       createdAt: this.deps.now(),
     };
     return this.repo.create(song);
+  }
+
+  /**
+   * Best-effort batch import with upsert semantics. Valid rows are persisted;
+   * a row whose title+artist matches an existing song (case-insensitive, trimmed)
+   * updates that song in place, preserving its id and createdAt, rather than
+   * creating a duplicate. Invalid rows (bad shape or bad chords) are skipped and
+   * reported by their 1-based position. `created` holds the resulting songs
+   * (created or updated), deduplicated by id so an in-batch duplicate collapses
+   * to one entry with the last row's values.
+   */
+  async createMany(rows: unknown[]): Promise<BatchImportResult> {
+    const created: Song[] = [];
+    const indexById = new Map<string, number>();
+    const errors: BatchImportResult["errors"] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = i + 1;
+      const parsed = createSongSchema.safeParse(rows[i]);
+      if (!parsed.success) {
+        const issue = parsed.error.issues[0];
+        const path = issue?.path.join(".");
+        errors.push({
+          row,
+          message: issue ? [path, issue.message].filter(Boolean).join(": ") : "Invalid song",
+        });
+        continue;
+      }
+      try {
+        const existing = await this.repo.findByTitleAndArtist(
+          parsed.data.title,
+          parsed.data.artist,
+        );
+        const song = existing
+          ? await this.update(existing.id, parsed.data)
+          : await this.create(parsed.data);
+
+        const at = indexById.get(song.id);
+        if (at === undefined) {
+          indexById.set(song.id, created.length);
+          created.push(song);
+        } else {
+          created[at] = song;
+        }
+      } catch (err) {
+        errors.push({ row, message: err instanceof Error ? err.message : "Failed to import song" });
+      }
+    }
+
+    return { created, errors };
   }
 
   async getById(id: string): Promise<Song> {

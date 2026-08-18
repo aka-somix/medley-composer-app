@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Cream Sky",
+    "artist": "The Grooves",
+    "bpm": 120,
+    "scale": "C",
+    "language": "English",
+    "verseChords": "C, G, Am, F",
+    "chorusChords": "F, C, G, Am",
+    "bridgeChords": "Am, F, C, G",
+    "alternateVerseChords": null
+  },
+  {
+    "title": "Vinile d'Estate",
+    "artist": "Vinyl Sisters",
+    "bpm": 98,
+    "scale": "G",
+    "language": "Italian",
+    "verseChords": "G, D, Em, C",
+    "chorusChords": "C, G, D, G"
+  },
+  {
+    "title": "Warm Static",
+    "artist": "Dust & Wax",
+    "bpm": 132,
+    "scale": "F",
+    "language": "English",
+    "verseChords": "F, Dm, Bb, C",
+    "chorusChords": "Bb, F, C, Dm",
+    "bridgeChords": "Dm, Bb, F, C"
+  }
+]
