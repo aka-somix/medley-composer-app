@@ -43,4 +43,6 @@ export const api = {
       body: JSON.stringify({ songs }),
     }),
   getSuggestions: (id: string) => request<Suggestion[]>(`/api/songs/${id}/suggestions`),
+  deleteSong: (id: string) =>
+    request<void>(`/api/songs/${id}`, { method: "DELETE" }),
 };

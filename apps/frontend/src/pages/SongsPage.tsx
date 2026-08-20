@@ -50,6 +50,10 @@ export function SongsPage() {
                 setEditingSong(null);
                 setPage(1);
               }}
+              onDeleted={() => {
+                setEditingSong(null);
+                setPage(1);
+              }}
             />
           </>
         ) : (

@@ -23,91 +23,74 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("SongForm", () => {
-  it("submits raw chords and normalizes an empty bridge to null", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ id: "new" }), {
-        status: 201,
+describe("SongForm delete", () => {
+  it("shows no Delete button in create mode", () => {
+    renderWithProviders(<SongForm />);
+    expect(screen.queryByRole("button", { name: /^delete$/i })).not.toBeInTheDocument();
+  });
+
+  it("opens a confirmation dialog on Delete without calling the network", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const user = userEvent.setup();
+    renderWithProviders(<SongForm song={SONG} />);
+
+    await user.click(screen.getByRole("button", { name: /delete cream sky/i }));
+
+    expect(screen.getByRole("heading", { name: /delete song\?/i })).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("deletes and calls onDeleted when confirmed", async () => {
+    const onDeleted = vi.fn();
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    const user = userEvent.setup();
+    renderWithProviders(<SongForm song={SONG} onDeleted={onDeleted} />);
+
+    await user.click(screen.getByRole("button", { name: /delete cream sky/i }));
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+
+    await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
+    const [url, init] = fetchSpy.mock.calls[0]!;
+    expect(String(url)).toMatch(/\/api\/songs\/s1$/);
+    expect(init?.method).toBe("DELETE");
+  });
+
+  it("shows an inline error and does not call onDeleted when delete fails", async () => {
+    const onDeleted = vi.fn();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: "Song not found" }), {
+        status: 404,
         headers: { "Content-Type": "application/json" },
       }),
     );
     const user = userEvent.setup();
-    renderWithProviders(<SongForm />);
+    renderWithProviders(<SongForm song={SONG} onDeleted={onDeleted} />);
 
-    await user.type(screen.getByLabelText("Title"), "Cream Sky");
-    await user.type(screen.getByLabelText("Artist"), "The Grooves");
-    await user.type(screen.getByLabelText("Verse chords"), "C, G, Am, F");
-    await user.type(screen.getByLabelText("Chorus chords"), "F, C, G, Am");
-    await user.click(screen.getByRole("button", { name: /add song/i }));
+    await user.click(screen.getByRole("button", { name: /delete cream sky/i }));
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
 
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
-    const [, init] = fetchSpy.mock.calls[0]!;
-    const body = JSON.parse(String((init as RequestInit).body));
-    expect(body).toMatchObject({
-      title: "Cream Sky",
-      artist: "The Grooves",
-      verseChords: "C, G, Am, F",
-      chorusChords: "F, C, G, Am",
-      bridgeChords: null,
-      alternateVerseChords: null,
-    });
-    await screen.findByText("Song added.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(/song not found/i);
+    expect(onDeleted).not.toHaveBeenCalled();
   });
 
-  it("pre-fills from a song and saves changes with PUT", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ ...SONG, title: "Cream Sky (Live)" }), {
-        status: 200,
+  it("clears the inline error after Cancel following a failed delete", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: "Song not found" }), {
+        status: 404,
         headers: { "Content-Type": "application/json" },
       }),
     );
     const user = userEvent.setup();
     renderWithProviders(<SongForm song={SONG} />);
 
-    // Chords are shown transposed back into the song's own scale.
-    expect(screen.getByLabelText("Title")).toHaveValue("Cream Sky");
-    expect(screen.getByLabelText("Verse chords")).toHaveValue("C, G, Am, F");
-    expect(screen.getByLabelText("Chorus chords")).toHaveValue("F, C, G, Am");
-    expect(screen.getByLabelText("Bridge chords (optional)")).toHaveValue("");
-    expect(screen.getByLabelText("Alt Verse chords (optional)")).toHaveValue("");
+    await user.click(screen.getByRole("button", { name: /delete cream sky/i }));
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/song not found/i);
 
-    await user.clear(screen.getByLabelText("Title"));
-    await user.type(screen.getByLabelText("Title"), "Cream Sky (Live)");
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    await user.click(screen.getByRole("button", { name: /^cancel$/i }));
 
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
-    const [url, init] = fetchSpy.mock.calls[0]!;
-    expect(String(url)).toContain("/api/songs/s1");
-    expect((init as RequestInit).method).toBe("PUT");
-    const body = JSON.parse(String((init as RequestInit).body));
-    expect(body).toMatchObject({
-      title: "Cream Sky (Live)",
-      artist: "The Grooves",
-      verseChords: "C, G, Am, F",
-      chorusChords: "F, C, G, Am",
-    });
-  });
-
-  it("submits an alternate verse when provided", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ id: "new" }), {
-        status: 201,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-    const user = userEvent.setup();
-    renderWithProviders(<SongForm />);
-
-    await user.type(screen.getByLabelText("Title"), "Alt Song");
-    await user.type(screen.getByLabelText("Artist"), "A");
-    await user.type(screen.getByLabelText("Verse chords"), "C, G, Am, F");
-    await user.type(screen.getByLabelText("Chorus chords"), "F, C, G, Am");
-    await user.type(screen.getByLabelText("Alt Verse chords (optional)"), "Am, F, C, G");
-    await user.click(screen.getByRole("button", { name: /add song/i }));
-
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
-    const [, init] = fetchSpy.mock.calls[0]!;
-    const body = JSON.parse(String((init as RequestInit).body));
-    expect(body.alternateVerseChords).toBe("Am, F, C, G");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

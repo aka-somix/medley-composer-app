@@ -3,7 +3,8 @@ import type { CreateSongInput, Song } from "@medleys/shared";
 import { Button } from "../atoms/Button.js";
 import { Input } from "../atoms/Input.js";
 import { FormField } from "../molecules/FormField.js";
-import { useCreateSong, useUpdateSong } from "../../api/hooks.js";
+import { ConfirmDialog } from "../molecules/ConfirmDialog.js";
+import { useCreateSong, useUpdateSong, useDeleteSong } from "../../api/hooks.js";
 import { transpose } from "../../lib/scales.js";
 
 const EMPTY: CreateSongInput = {
@@ -41,16 +42,30 @@ export function SongForm({
   song,
   onCreated,
   onSaved,
+  onDeleted,
 }: {
   song?: Song;
   onCreated?: () => void;
   onSaved?: () => void;
+  onDeleted?: () => void;
 }) {
   const editing = Boolean(song);
   const [form, setForm] = useState<CreateSongInput>(song ? songToForm(song) : EMPTY);
   const createSong = useCreateSong();
   const updateSong = useUpdateSong(song?.id ?? "");
   const mutation = editing ? updateSong : createSong;
+  const deleteSong = useDeleteSong();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleDelete = () => {
+    if (!song) return;
+    deleteSong.mutate(song.id, {
+      onSuccess: () => {
+        setConfirmOpen(false);
+        onDeleted?.();
+      },
+    });
+  };
 
   const set = <K extends keyof CreateSongInput>(key: K, value: CreateSongInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -127,16 +142,16 @@ export function SongForm({
         />
       </FormField>
 
-      {mutation.isError ? (
+      {mutation.isError || deleteSong.isError ? (
         <p className="text-sm text-rust" role="alert">
-          {(mutation.error as Error).message}
+          {((mutation.error ?? deleteSong.error) as Error).message}
         </p>
       ) : null}
       {mutation.isSuccess ? (
         <p className="text-sm text-teal">{editing ? "Changes saved." : "Song added."}</p>
       ) : null}
 
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={mutation.isPending}>
           {editing
             ? mutation.isPending
@@ -146,7 +161,34 @@ export function SongForm({
               ? "Adding…"
               : "Add song"}
         </Button>
+        {editing && song ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="text-rust"
+            aria-label={`Delete ${song.title}`}
+            onClick={() => setConfirmOpen(true)}
+          >
+            Delete
+          </Button>
+        ) : null}
       </div>
+
+      {editing && song ? (
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Delete song?"
+          message={`“${song.title}” will be permanently removed. This cannot be undone.`}
+          confirmLabel="Delete"
+          confirmVariant="primary"
+          busy={deleteSong.isPending}
+          onConfirm={handleDelete}
+          onCancel={() => {
+            setConfirmOpen(false);
+            deleteSong.reset();
+          }}
+        />
+      ) : null}
     </form>
   );
 }

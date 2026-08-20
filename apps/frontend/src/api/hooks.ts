@@ -62,3 +62,13 @@ export function useImportSongs() {
     },
   });
 }
+
+export function useDeleteSong() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteSong(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["songs"] });
+    },
+  });
+}

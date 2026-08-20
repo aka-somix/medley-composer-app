@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Paginated, Song } from "@medleys/shared";
 import { SongsPage } from "./SongsPage.js";
@@ -19,38 +19,40 @@ const SONG: Song = {
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
-function mockList(): void {
-  const page: Paginated<Song> = { items: [SONG], total: 1, page: 1, pageSize: 8 };
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(
-    new Response(JSON.stringify(page), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    }),
-  );
+function jsonResponse(body: unknown) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("SongsPage", () => {
-  it("opens a pre-filled edit form when a song's Edit is clicked, and Cancel returns to Add", async () => {
-    mockList();
+describe("SongsPage delete flow", () => {
+  it("closes the edit panel back to 'Add a song' after a confirmed delete", async () => {
+    const list: Paginated<Song> = { items: [SONG], total: 1, page: 1, pageSize: 8 };
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const method = (init?.method ?? "GET").toUpperCase();
+      if (method === "DELETE") return Promise.resolve(new Response(null, { status: 204 }));
+      return Promise.resolve(jsonResponse(list));
+    });
     const user = userEvent.setup();
     renderWithProviders(<SongsPage />);
 
-    // Default panel is the add-song form.
-    expect(await screen.findByRole("form", { name: "Add song" })).toBeInTheDocument();
-
+    // Enter edit mode from the song card.
     await user.click(await screen.findByRole("button", { name: /edit cream sky/i }));
+    expect(screen.getByRole("heading", { name: /edit song/i })).toBeInTheDocument();
 
-    const editForm = await screen.findByRole("form", { name: "Edit song" });
-    expect(within(editForm).getByLabelText("Title")).toHaveValue("Cream Sky");
-    expect(within(editForm).getByLabelText("Verse chords")).toHaveValue("C, G, Am, F");
+    // Delete → confirm.
+    await user.click(screen.getByRole("button", { name: /delete cream sky/i }));
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
 
-    await user.click(screen.getByRole("button", { name: /cancel/i }));
-
-    expect(screen.getByRole("form", { name: "Add song" })).toBeInTheDocument();
-    expect(screen.queryByRole("form", { name: "Edit song" })).not.toBeInTheDocument();
+    // Panel returns to "Add a song".
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: /add a song/i })).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("heading", { name: /edit song/i })).not.toBeInTheDocument();
   });
 });
