@@ -1,10 +1,13 @@
+import "dotenv/config";
 import { createApp } from "./app.js";
 import { createContainer } from "./container.js";
 
 const PORT = Number.parseInt(process.env.PORT ?? "4000", 10);
-const DB_LOCATION = process.env.DB_LOCATION ?? "./medleys.sqlite";
+// Turso remote when TURSO_CONNECTION_URL is set; a local file otherwise.
+const DB_LOCATION = process.env.TURSO_CONNECTION_URL ?? "file:medleys.db";
+const AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN;
 
-const container = createContainer({ dbLocation: DB_LOCATION });
+const container = await createContainer({ dbLocation: DB_LOCATION, authToken: AUTH_TOKEN });
 const app = createApp(container);
 
 app.listen(PORT, () => {

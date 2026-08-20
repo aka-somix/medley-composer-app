@@ -30,7 +30,7 @@ export interface SectionMatch {
 }
 
 /** Compatibility threshold: two progressions are "close" at or above this. */
-export const COMPATIBILITY_THRESHOLD = 0.5;
+export const COMPATIBILITY_THRESHOLD = 0.55;
 
 /** A song as persisted and returned by the API. */
 export interface Song {

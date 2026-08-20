@@ -7,9 +7,9 @@ let container: Container;
 let app: ReturnType<typeof createApp>;
 let seq = 0;
 
-beforeEach(() => {
+beforeEach(async () => {
   seq = 0;
-  container = createContainer({
+  container = await createContainer({
     generateId: () => `id-${++seq}`,
     now: () => "2026-08-17T00:00:00.000Z",
   });

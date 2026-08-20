@@ -7,8 +7,13 @@ import { SuggestionService } from "./services/suggestion.service.js";
 import { SongsController } from "./controllers/songs.controller.js";
 
 export interface ContainerConfig {
-  /** SQLite location; ":memory:" for tests, a file path for local dev. */
+  /**
+   * libSQL location; ":memory:" for tests, `file:local.db` for local dev, or a
+   * `libsql://…` Turso url for remote.
+   */
   dbLocation?: string;
+  /** Turso auth token; required for a remote `libsql://…` url. */
+  authToken?: string;
   /** Override the id generator (deterministic ids in tests). */
   generateId?: () => string;
   /** Override the clock (deterministic timestamps in tests). */
@@ -19,8 +24,8 @@ export interface ContainerConfig {
 
 /**
  * Composition root. Wires concrete implementations behind their interfaces.
- * Swapping SQLite for Postgres means providing a different repository here —
- * nothing above this layer changes.
+ * Swapping libSQL/Turso for Postgres means providing a different repository
+ * here — nothing above this layer changes.
  */
 export interface Container {
   controller: SongsController;
@@ -31,12 +36,12 @@ export interface Container {
   close: () => void;
 }
 
-export function createContainer(config: ContainerConfig = {}): Container {
+export async function createContainer(config: ContainerConfig = {}): Promise<Container> {
   let database: DatabaseHandle | undefined;
   let repository = config.repository;
 
   if (!repository) {
-    database = createDatabase(config.dbLocation ?? ":memory:");
+    database = await createDatabase(config.dbLocation ?? ":memory:", config.authToken);
     repository = new DrizzleSongRepository(database.db);
   }
 

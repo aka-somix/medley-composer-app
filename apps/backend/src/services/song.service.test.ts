@@ -2,7 +2,7 @@ import { beforeEach, describe, it, expect } from "vitest";
 import { createContainer, type Container } from "../container.js";
 
 let seq = 0;
-function makeContainer(): Container {
+function makeContainer(): Promise<Container> {
   seq = 0;
   return createContainer({
     generateId: () => `id-${++seq}`,
@@ -12,8 +12,8 @@ function makeContainer(): Container {
 
 describe("SongService.create", () => {
   let container: Container;
-  beforeEach(() => {
-    container = makeContainer();
+  beforeEach(async () => {
+    container = await makeContainer();
   });
 
   it("translates chords into degree tokens in the song's scale", async () => {
@@ -102,8 +102,8 @@ describe("SongService.create", () => {
 
 describe("SongService.createMany", () => {
   let container: Container;
-  beforeEach(() => {
-    container = makeContainer();
+  beforeEach(async () => {
+    container = await makeContainer();
   });
 
   const valid = (over: Record<string, unknown> = {}) => ({

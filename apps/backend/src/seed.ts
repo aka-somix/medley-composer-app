@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createContainer } from "./container.js";
 import type { CreateSongBody } from "./validation.js";
 
@@ -88,10 +89,11 @@ const SEED_SONGS: CreateSongBody[] = [
 ];
 
 async function main(): Promise<void> {
-  const dbLocation = process.env.DB_LOCATION ?? "./medleys.sqlite";
-  const container = createContainer({ dbLocation });
+  const dbLocation = process.env.TURSO_CONNECTION_URL ?? "file:medleys.db";
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+  const container = await createContainer({ dbLocation, authToken });
 
-  container.database?.raw.exec("DELETE FROM songs");
+  await container.database?.raw.execute("DELETE FROM songs");
   for (const song of SEED_SONGS) {
     await container.songService.create(song);
   }

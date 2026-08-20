@@ -2,7 +2,7 @@ import type { Song } from "@medleys/shared";
 
 /**
  * Persistence boundary for songs. Services depend on this interface only, so
- * the storage engine (SQLite now, Postgres later) can be swapped by injecting
+ * the storage engine (libSQL/Turso now, Postgres later) can be swapped by injecting
  * a different implementation in the composition root.
  */
 export interface SongRepository {

@@ -1,30 +1,34 @@
-import Database from "better-sqlite3";
-import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { createClient, type Client } from "@libsql/client";
+import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import * as schema from "./schema.js";
 
-export type Db = BetterSQLite3Database<typeof schema>;
+export type Db = LibSQLDatabase<typeof schema>;
 
 export interface DatabaseHandle {
   db: Db;
-  raw: Database.Database;
+  raw: Client;
   close: () => void;
 }
 
 /**
- * Create a SQLite-backed Drizzle database. Pass ":memory:" for an ephemeral
- * database (used in tests). The schema is created idempotently on open so no
- * separate migration step is needed for local/dev use.
+ * Create a libSQL-backed Drizzle database. `location` is a libSQL url:
+ * `":memory:"` for an ephemeral database (tests), `file:local.db` for a local
+ * file, or a `libsql://…` Turso url (pass `authToken` for remote). The schema
+ * is created idempotently on open so no separate migration step is needed for
+ * local/dev use.
  */
-export function createDatabase(location = ":memory:"): DatabaseHandle {
-  const raw = new Database(location);
-  raw.pragma("journal_mode = WAL");
-  ensureSchema(raw);
+export async function createDatabase(
+  location = ":memory:",
+  authToken?: string,
+): Promise<DatabaseHandle> {
+  const raw = createClient({ url: location, authToken });
+  await ensureSchema(raw);
   const db = drizzle(raw, { schema });
   return { db, raw, close: () => raw.close() };
 }
 
-function ensureSchema(raw: Database.Database): void {
-  raw.exec(`
+async function ensureSchema(raw: Client): Promise<void> {
+  await raw.executeMultiple(`
     CREATE TABLE IF NOT EXISTS songs (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -42,7 +46,7 @@ function ensureSchema(raw: Database.Database): void {
   `);
   // Add the column to pre-existing databases created before this field existed.
   try {
-    raw.exec("ALTER TABLE songs ADD COLUMN alternate_verse_degrees TEXT");
+    await raw.execute("ALTER TABLE songs ADD COLUMN alternate_verse_degrees TEXT");
   } catch {
     /* column already exists */
   }

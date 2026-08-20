@@ -1,4 +1,8 @@
-# Backend rules (`apps/backend`)
+---
+paths:
+  - "apps/backend/**/*"
+---
+# Backend rules
 
 Standards for the Express + Drizzle REST API. Follow these without being asked.
 
@@ -9,7 +13,7 @@ Standards for the Express + Drizzle REST API. Follow these without being asked.
   validate input with a zod schema, call a service, shape the response. No
   business logic, no persistence.
 - **Services** (`services/*.service.ts`) hold business logic. They depend on
-  repository **interfaces**, never on Drizzle or `better-sqlite3` directly.
+  repository **interfaces**, never on Drizzle or the libSQL client directly.
 - **Repositories**: define the interface in `repositories/<name>.repository.ts`
   and the concrete Drizzle version in `drizzle-<name>.repository.ts`. Swapping the
   database means adding a new implementation — nothing above changes.
@@ -37,8 +41,9 @@ Standards for the Express + Drizzle REST API. Follow these without being asked.
 ## Music + compatibility
 - Never re-implement chord/degree math or similarity here — import from
   `@medleys/shared`. Compatibility threshold is `COMPATIBILITY_THRESHOLD`.
-- Suggestion ranking order is fixed: BPM proximity → same scale → same language.
-  Ranking only sorts; every song passing the threshold is returned.
+- Suggestion ranking order is fixed: highest compatibility score → BPM proximity
+  → same scale → same language. Every song passing the threshold is ranked, then
+  only the top `SUGGESTION_LIMIT` (currently 5) are returned.
 
 ## Testing (TDD)
 - Write the test first. Service tests use an in-memory container
@@ -52,5 +57,8 @@ Standards for the Express + Drizzle REST API. Follow these without being asked.
 - ESM everywhere; import local files with the `.js` extension. `strict` TS, no
   `any`. Small, single-purpose files.
 
-## Rules
-- Treat medleys.sqlite as a production DB. Don't delete it or change its schema without a migration.
+## Database
+- Storage is libSQL/Turso via `drizzle-orm/libsql`. Connection comes from
+  `TURSO_CONNECTION_URL` / `TURSO_AUTH_TOKEN` (see `.env`); with no url it falls
+  back to a local `file:medleys.db`. Treat the Turso DB as production — don't
+  change its schema without a migration.

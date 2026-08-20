@@ -4,7 +4,7 @@ import type { CreateSongBody } from "../validation.js";
 import { COMPATIBILITY_THRESHOLD } from "@medleys/shared";
 
 let seq = 0;
-function makeContainer(): Container {
+function makeContainer(): Promise<Container> {
   seq = 0;
   return createContainer({
     generateId: () => `id-${++seq}`,
@@ -24,8 +24,8 @@ const base: Omit<CreateSongBody, "title"> = {
 
 describe("SuggestionService", () => {
   let container: Container;
-  beforeEach(() => {
-    container = makeContainer();
+  beforeEach(async () => {
+    container = await makeContainer();
   });
 
   it("returns only songs scoring at or above the compatibility threshold", async () => {
@@ -82,7 +82,75 @@ describe("SuggestionService", () => {
     expect(suggestions[0]!.bestMatch.target).toBe("alternateVerse");
   });
 
-  it("ranks by BPM, then scale, then language", async () => {
+  it("ranks a higher-scoring candidate above a closer-BPM one", async () => {
+    const target = await container.songService.create({
+      ...base,
+      title: "Target",
+      bpm: 120,
+    });
+    // Perfect verse match, but far BPM.
+    await container.songService.create({
+      ...base,
+      title: "HighScoreFarBpm",
+      bpm: 150,
+      verseChords: "C, G, Am, F", // == target verse => score 1
+    });
+    // One chord off (3/4 tokens match => 0.75), but nearly identical BPM.
+    await container.songService.create({
+      ...base,
+      title: "LowScoreCloseBpm",
+      bpm: 121,
+      verseChords: "C, G, Am, Dm", // one token differs => score 0.75
+      chorusChords: "Dm7, Em7, Fmaj7, G7", // no better cross-section match
+    });
+
+    const suggestions = await container.suggestionService.getSuggestions(target.id);
+    expect(suggestions.map((s) => s.song.title)).toEqual([
+      "HighScoreFarBpm",
+      "LowScoreCloseBpm",
+    ]);
+    expect(suggestions[0]!.score).toBeGreaterThan(suggestions[1]!.score);
+  });
+
+  it("returns only the top 5 highest-scoring suggestions", async () => {
+    const target = await container.songService.create({
+      ...base,
+      title: "Target",
+      bpm: 120,
+    });
+    // Five perfect matches (score 1), distinct BPMs so ordering is deterministic.
+    for (let i = 0; i < 5; i++) {
+      await container.songService.create({
+        ...base,
+        title: `HighScore${i}`,
+        bpm: 130 + i,
+        verseChords: "C, G, Am, F", // == target verse => score 1
+      });
+    }
+    // A lower-scoring song with the closest BPM: under the old BPM-first rule it
+    // would have led the list; now it ranks last and is dropped by the top-5 cap.
+    await container.songService.create({
+      ...base,
+      title: "SneakyCloseBpm",
+      bpm: 121,
+      verseChords: "C, G, Am, Dm", // score 0.75
+      chorusChords: "Dm7, Em7, Fmaj7, G7",
+    });
+
+    const suggestions = await container.suggestionService.getSuggestions(target.id);
+    expect(suggestions).toHaveLength(5);
+    const titles = suggestions.map((s) => s.song.title);
+    expect(titles).not.toContain("SneakyCloseBpm");
+    expect(titles).toEqual([
+      "HighScore0",
+      "HighScore1",
+      "HighScore2",
+      "HighScore3",
+      "HighScore4",
+    ]);
+  });
+
+  it("ranks equal-score candidates by BPM, then scale, then language", async () => {
     const target = await container.songService.create({
       ...base,
       title: "Target",

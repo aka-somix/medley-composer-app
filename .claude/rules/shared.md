@@ -1,4 +1,8 @@
-# Shared package rules (`packages/shared`)
+---
+paths:
+  - "packages/shared/**/*"
+---
+# Shared package rules
 
 `@medleys/shared` is the single source of truth for domain types and music
 theory, imported by both apps. Treat it as a pure library.

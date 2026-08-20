@@ -1,4 +1,8 @@
-# Frontend rules (`apps/frontend`)
+---
+paths:
+  - "apps/frontend/**/*"
+---
+# Frontend rules
 
 Standards for the React + Vite + Tailwind client. Follow these without being asked.
 

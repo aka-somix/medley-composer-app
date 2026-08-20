@@ -7,6 +7,12 @@ import {
 import type { SongRepository } from "../repositories/song.repository.js";
 import { NotFoundError } from "../http/errors.js";
 
+/** Maximum number of suggestions returned, ranked best-first. */
+const SUGGESTION_LIMIT = 5;
+
+/** Scores are compared as ties when within this float-noise tolerance. */
+const SCORE_EPSILON = 1e-9;
+
 /**
  * Finds songs compatible with a target song for medley chaining.
  *
@@ -14,10 +20,11 @@ import { NotFoundError } from "../http/errors.js";
  * candidate's score is the best similarity across the active section-comparison
  * rules, and bestMatch records which section pair won. Survivors (score >=
  * COMPATIBILITY_THRESHOLD) are ranked by, in order:
- *   1. closest BPM (highest priority)
- *   2. same music scale
- *   3. same language (lowest priority)
- * Ranking only sorts — every compatible song is returned.
+ *   1. highest compatibility score (highest priority)
+ *   2. closest BPM
+ *   3. same music scale
+ *   4. same language (lowest priority)
+ * Only the top SUGGESTION_LIMIT survivors are returned.
  */
 export class SuggestionService {
   constructor(private readonly repo: SongRepository) {}
@@ -33,7 +40,7 @@ export class SuggestionService {
       .filter((s) => s.score >= COMPATIBILITY_THRESHOLD);
 
     compatible.sort((a, b) => this.compare(target, a, b));
-    return compatible;
+    return compatible.slice(0, SUGGESTION_LIMIT);
   }
 
   private score(target: Song, candidate: Song): Suggestion {
@@ -42,6 +49,9 @@ export class SuggestionService {
   }
 
   private compare(target: Song, a: Suggestion, b: Suggestion): number {
+    const scoreDiff = b.score - a.score; // higher score ranks first
+    if (Math.abs(scoreDiff) > SCORE_EPSILON) return scoreDiff;
+
     const bpmDiff = Math.abs(a.song.bpm - target.bpm) - Math.abs(b.song.bpm - target.bpm);
     if (bpmDiff !== 0) return bpmDiff;
 
