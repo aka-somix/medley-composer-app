@@ -59,20 +59,14 @@ export async function createContainer(config: ContainerConfig = {}): Promise<Con
     invites ??= new DrizzleInviteRepository(database.db);
   }
 
-  // Built lazily on first use so containers that never hit an auth route
-  // (e.g. service-level tests) don't need a GOOGLE_CLIENT_ID.
-  let googleVerifier: GoogleTokenVerifier | undefined;
-  const verifier: TokenVerifier = config.verifier ?? {
-    verify: (idToken) => {
-      if (!googleVerifier) {
-        if (!config.googleClientId) {
-          throw new Error("GOOGLE_CLIENT_ID is required to verify tokens (or inject a verifier)");
-        }
-        googleVerifier = new GoogleTokenVerifier(config.googleClientId);
+  const verifier =
+    config.verifier ??
+    (() => {
+      if (!config.googleClientId) {
+        throw new Error("GOOGLE_CLIENT_ID is required to verify tokens (or inject a verifier)");
       }
-      return googleVerifier.verify(idToken);
-    },
-  };
+      return new GoogleTokenVerifier(config.googleClientId);
+    })();
 
   const requireInvitedMw = requireInvited({ verifier, invites });
 
