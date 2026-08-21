@@ -52,7 +52,18 @@ export function requireInvited(deps: {
         res.status(401).json({ error: "Invalid or expired token" });
         return;
       }
-      if (!payload.email_verified || !(await deps.invites.isInvited(payload.email))) {
+      if (!payload.email_verified) {
+        res.status(401).json({ error: "Not invited" });
+        return;
+      }
+      let isInvited: boolean;
+      try {
+        isInvited = await deps.invites.isInvited(payload.email);
+      } catch (err) {
+        next(err);
+        return;
+      }
+      if (!isInvited) {
         res.status(401).json({ error: "Not invited" });
         return;
       }

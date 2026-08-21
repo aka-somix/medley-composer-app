@@ -11,7 +11,7 @@ function mockRes() {
 }
 
 const invited: InviteRepository = {
-  isInvited: async (email) => email === "friend@gmail.com",
+  isInvited: async (email) => email.toLowerCase() === "friend@gmail.com",
 };
 
 function verifier(payload: { email: string; email_verified: boolean }): TokenVerifier {
@@ -81,5 +81,37 @@ describe("requireInvited", () => {
     await mw(req, res, next);
     expect(next).toHaveBeenCalledOnce();
     expect(req.user).toEqual({ email: "friend@gmail.com" });
+  });
+
+  it("lowercases a mixed-case invited, verified email before comparing/storing", async () => {
+    const mw = requireInvited({
+      verifier: verifier({ email: "Friend@Gmail.com", email_verified: true }),
+      invites: invited,
+    });
+    const req = { headers: { authorization: "Bearer x" } } as Request;
+    const res = mockRes();
+    const next = vi.fn();
+    await mw(req, res, next);
+    expect(next).toHaveBeenCalledOnce();
+    expect(req.user).toEqual({ email: "friend@gmail.com" });
+  });
+
+  it("routes an unexpected invite-repository error to next(err) instead of 401ing", async () => {
+    const dbError = new Error("DB unavailable");
+    const failingInvites: InviteRepository = {
+      isInvited: async () => {
+        throw dbError;
+      },
+    };
+    const mw = requireInvited({
+      verifier: verifier({ email: "friend@gmail.com", email_verified: true }),
+      invites: failingInvites,
+    });
+    const req = { headers: { authorization: "Bearer x" } } as Request;
+    const res = mockRes();
+    const next = vi.fn();
+    await mw(req, res, next);
+    expect(next).toHaveBeenCalledWith(dbError);
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
