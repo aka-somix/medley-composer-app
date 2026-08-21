@@ -12,6 +12,8 @@ beforeEach(async () => {
   container = await createContainer({
     generateId: () => `id-${++seq}`,
     now: () => "2026-08-17T00:00:00.000Z",
+    verifier: { verify: async () => ({ email: "invited@example.com", email_verified: true }) },
+    invites: { isInvited: async (email) => email === "invited@example.com" },
   });
   app = createApp(container);
 });
@@ -32,18 +34,24 @@ const validBody = {
 
 describe("POST /api/songs", () => {
   it("creates a song and returns 201 with translated degrees", async () => {
-    const res = await request(app).post("/api/songs").send(validBody);
+    const res = await request(app).post("/api/songs").set("Authorization", "Bearer test").send(validBody);
     expect(res.status).toBe(201);
     expect(res.body.verseDegrees).toEqual(["1", "5", "6m", "4"]);
   });
 
   it("rejects invalid bodies with 400", async () => {
-    const res = await request(app).post("/api/songs").send({ ...validBody, bpm: -5 });
+    const res = await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, bpm: -5 });
     expect(res.status).toBe(400);
   });
 
   it("rejects an invalid scale root with 400", async () => {
-    const res = await request(app).post("/api/songs").send({ ...validBody, scale: "H" });
+    const res = await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, scale: "H" });
     expect(res.status).toBe(400);
   });
 });
@@ -52,6 +60,7 @@ describe("POST /api/songs/batch", () => {
   it("imports valid rows, skips bad ones, and returns 201 with results", async () => {
     const res = await request(app)
       .post("/api/songs/batch")
+      .set("Authorization", "Bearer test")
       .send({
         songs: [
           { ...validBody, title: "First" },
@@ -67,15 +76,18 @@ describe("POST /api/songs/batch", () => {
   });
 
   it("rejects an empty songs array with 400", async () => {
-    const res = await request(app).post("/api/songs/batch").send({ songs: [] });
+    const res = await request(app)
+      .post("/api/songs/batch")
+      .set("Authorization", "Bearer test")
+      .send({ songs: [] });
     expect(res.status).toBe(400);
   });
 });
 
 describe("GET /api/songs", () => {
   it("paginates", async () => {
-    await request(app).post("/api/songs").send({ ...validBody, title: "One" });
-    await request(app).post("/api/songs").send({ ...validBody, title: "Two" });
+    await request(app).post("/api/songs").set("Authorization", "Bearer test").send({ ...validBody, title: "One" });
+    await request(app).post("/api/songs").set("Authorization", "Bearer test").send({ ...validBody, title: "Two" });
     const res = await request(app).get("/api/songs?page=1&pageSize=1");
     expect(res.status).toBe(200);
     expect(res.body.total).toBe(2);
@@ -85,7 +97,10 @@ describe("GET /api/songs", () => {
 
 describe("GET /api/songs/search", () => {
   it("matches titles case-insensitively", async () => {
-    await request(app).post("/api/songs").send({ ...validBody, title: "Cream Sky" });
+    await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, title: "Cream Sky" });
     const res = await request(app).get("/api/songs/search?q=cream");
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
@@ -94,9 +109,13 @@ describe("GET /api/songs/search", () => {
 
 describe("GET /api/songs/:id/suggestions", () => {
   it("returns compatible songs", async () => {
-    const target = await request(app).post("/api/songs").send({ ...validBody, title: "Target" });
+    const target = await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, title: "Target" });
     await request(app)
       .post("/api/songs")
+      .set("Authorization", "Bearer test")
       .send({
         ...validBody,
         title: "Match",
@@ -117,5 +136,30 @@ describe("GET /api/songs/:id", () => {
   it("returns 404 for a missing song", async () => {
     const res = await request(app).get("/api/songs/nope");
     expect(res.status).toBe(404);
+  });
+});
+
+describe("auth on writes", () => {
+  it("rejects a write with no token (401)", async () => {
+    const res = await request(app).post("/api/songs").send(validBody);
+    expect(res.status).toBe(401);
+  });
+
+  it("still allows reads without a token", async () => {
+    const res = await request(app).get("/api/songs?page=1&pageSize=8");
+    expect(res.status).toBe(200);
+  });
+});
+
+describe("GET /api/auth/me", () => {
+  it("401s without a token", async () => {
+    const res = await request(app).get("/api/auth/me");
+    expect(res.status).toBe(401);
+  });
+
+  it("returns the email for an invited caller", async () => {
+    const res = await request(app).get("/api/auth/me").set("Authorization", "Bearer test");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ email: "invited@example.com" });
   });
 });

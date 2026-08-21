@@ -14,7 +14,11 @@ export function createApp(container: Container): Express {
     res.json({ status: "ok" });
   });
 
-  app.use("/api/songs", createSongsRouter(container.controller));
+  app.use("/api/songs", createSongsRouter(container.controller, container.requireInvited));
+
+  app.get("/api/auth/me", container.requireInvited, (req, res) => {
+    res.json({ email: req.user!.email });
+  });
 
   app.use(errorMiddleware);
   return app;
