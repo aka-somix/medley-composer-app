@@ -46,6 +46,36 @@ The frontend reads the API base URL from `VITE_API_URL` (defaults to
 - `pnpm run build` — build all workspaces
 - `pnpm run seed` — reset + load the sample library
 
+## Authentication
+
+Writes (create/edit/delete/import) require an invited Google account; reads are
+public. Auth uses Google Sign-In — the browser gets a Google ID token (a JWT)
+that the backend verifies and checks against the `invited_emails` table.
+
+### One-time Google setup
+
+1. In the Google Cloud Console, create an **OAuth 2.0 Client ID** of type **Web
+   application**.
+2. Under **Authorized JavaScript origins**, add `http://localhost:5173` and your
+   deployed frontend URL.
+3. Set the client id in both places (same value):
+   - backend env `GOOGLE_CLIENT_ID`
+   - frontend build env `VITE_GOOGLE_CLIENT_ID`
+
+Google Sign-In and token verification are free at this scale.
+
+### Inviting someone
+
+Insert their email (lowercased) into the `invited_emails` table:
+
+```bash
+turso db shell medleys \
+  "INSERT INTO invited_emails (email, created_at) VALUES ('friend@gmail.com', datetime('now'))"
+```
+
+For a local file DB, run the same `INSERT` via any SQLite client against
+`apps/backend/medleys.db`. To revoke, `DELETE` the row.
+
 ## Testing
 
 - `pnpm --filter @medleys/shared test` — music theory + similarity
