@@ -30,10 +30,8 @@ async function fetchMe(): Promise<{ email: string } | null> {
   const res = await fetch(`${BASE_URL}/api/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) {
-    setToken(null);
-    return null;
-  }
+  if (res.status === 401) setToken(null);
+  if (!res.ok) return null;
   return (await res.json()) as { email: string };
 }
 
@@ -41,16 +39,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [token, setTokenState] = useState<string | null>(getToken());
 
-  // Initialise GIS once; its callback stores the credential and resolves the user.
+  // Initialise GIS once it's available; index.html loads the script `async`, so it
+  // may not exist yet on mount — poll briefly until it does.
   useEffect(() => {
-    const gid = googleId();
-    gid?.initialize({
-      client_id: CLIENT_ID,
-      callback: (resp) => {
-        setToken(resp.credential);
-        void fetchMe().then(setUser);
-      },
-    });
+    const init = (gid: GoogleId) =>
+      gid.initialize({
+        client_id: CLIENT_ID,
+        callback: (resp) => {
+          setToken(resp.credential);
+          void fetchMe().then(setUser);
+        },
+      });
+
+    const existing = googleId();
+    if (existing) {
+      init(existing);
+      return;
+    }
+    const interval = setInterval(() => {
+      const gid = googleId();
+      if (gid) {
+        init(gid);
+        clearInterval(interval);
+      }
+    }, 200);
+    return () => clearInterval(interval);
   }, []);
 
   // Mirror token-store changes (e.g. a 401 clearing the token elsewhere).
@@ -65,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // On first load with a persisted token, confirm we're still invited.
   useEffect(() => {
+    if (!getToken()) return;
     void fetchMe().then(setUser);
   }, []);
 
