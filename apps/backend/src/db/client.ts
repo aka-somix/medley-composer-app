@@ -43,6 +43,10 @@ async function ensureSchema(raw: Client): Promise<void> {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_songs_title ON songs (title);
+    CREATE TABLE IF NOT EXISTS invited_emails (
+      email TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL
+    );
   `);
   // Add the column to pre-existing databases created before this field existed.
   try {
