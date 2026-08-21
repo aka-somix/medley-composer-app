@@ -5,14 +5,21 @@ import type {
   Song,
   Suggestion,
 } from "@medleys/shared";
+import { getToken, setToken } from "./token-store.js";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init?.headers as Record<string, string> | undefined),
+    },
   });
+  if (res.status === 401) setToken(null);
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
     try {
