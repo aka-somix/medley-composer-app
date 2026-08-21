@@ -21,3 +21,11 @@ export const songs = sqliteTable("songs", {
 
 export type SongRow = typeof songs.$inferSelect;
 export type SongInsert = typeof songs.$inferInsert;
+
+/** Emails allowed to perform writes. Populated manually (see README). */
+export const invitedEmails = sqliteTable("invited_emails", {
+  email: text("email").primaryKey(),
+  createdAt: text("created_at").notNull(),
+});
+
+export type InvitedEmailRow = typeof invitedEmails.$inferSelect;

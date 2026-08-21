@@ -7,6 +7,8 @@ function makeContainer(): Promise<Container> {
   return createContainer({
     generateId: () => `id-${++seq}`,
     now: () => "2026-08-17T00:00:00.000Z",
+    verifier: { verify: async () => ({ email: "test@example.com", email_verified: true }) },
+    invites: { isInvited: async () => true },
   });
 }
 
