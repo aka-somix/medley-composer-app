@@ -16,7 +16,7 @@ describe("NavBar", () => {
     expect(screen.getByRole("button", { name: /got invited/i })).toBeInTheDocument();
   });
 
-  it("shows the email and a sign-out control when signed in", () => {
+  it("shows only a sign-out control (no email) when signed in", () => {
     vi.spyOn(auth, "useAuth").mockReturnValue({
       user: { email: "friend@gmail.com" },
       token: "t",
@@ -24,7 +24,7 @@ describe("NavBar", () => {
       signOut: vi.fn(),
     });
     renderWithProviders(<NavBar />);
-    expect(screen.getByText("friend@gmail.com")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
+    expect(screen.queryByText("friend@gmail.com")).not.toBeInTheDocument();
   });
 });

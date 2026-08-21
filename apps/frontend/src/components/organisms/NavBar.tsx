@@ -25,25 +25,22 @@ export function NavBar() {
             Library
           </NavLink>
           {user ? (
-            <div className="flex items-center gap-2 pl-2">
-              <span className="text-sm text-sepia">{user.email}</span>
-              <button
-                type="button"
-                onClick={signOut}
-                className="rounded-full px-4 py-1.5 text-sm font-semibold text-sepia transition-colors hover:bg-parchment"
-              >
-                Sign out
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={signOut}
+              className="rounded-full px-4 py-1.5 text-sm font-semibold text-sepia transition-colors hover:bg-parchment"
+            >
+              Sign out
+            </button>
           ) : (
             <button
               type="button"
               onClick={signIn}
               aria-label="Got invited? Sign in"
-              className="group relative rounded-full bg-rust px-4 py-1.5 text-sm font-semibold text-cream transition-colors hover:bg-wax"
+              className="group ml-3 grid rounded-full bg-wax px-4 py-1.5 text-sm font-semibold text-cream transition-colors hover:bg-rust"
             >
-              <span className="group-hover:hidden">Got invited?</span>
-              <span className="hidden group-hover:inline">Sign in</span>
+              <span className="col-start-1 row-start-1 group-hover:invisible">Got invited?</span>
+              <span className="col-start-1 row-start-1 invisible group-hover:visible">Sign in</span>
             </button>
           )}
         </nav>
