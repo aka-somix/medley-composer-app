@@ -1,4 +1,4 @@
-# Medleys
+# Tiny Medleys
 
 A tool for building medleys — pick a song, and get suggestions for songs that
 chain well by chord progression, then extend the chain node by node.

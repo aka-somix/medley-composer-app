@@ -17,5 +17,5 @@ const app = createApp(container);
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`Medleys API listening on http://localhost:${PORT} (db: ${DB_LOCATION})`);
+  console.log(`Tiny Medleys API listening on http://localhost:${PORT} (db: ${DB_LOCATION})`);
 });
