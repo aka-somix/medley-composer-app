@@ -3,12 +3,14 @@ import cors from "cors";
 import type { Container } from "./container.js";
 import { createSongsRouter } from "./routes/songs.routes.js";
 import { errorMiddleware } from "./http/errors.js";
+import { requestLogger } from "./http/logger.js";
 
 /** Build the Express app from a container. Kept separate from server boot so tests can drive it in-process. */
 export function createApp(container: Container): Express {
   const app = express();
   app.use(cors());
   app.use(express.json());
+  app.use(requestLogger);
 
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });

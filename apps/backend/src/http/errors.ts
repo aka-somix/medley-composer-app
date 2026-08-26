@@ -33,7 +33,7 @@ export function asyncHandler(
 /** Central error middleware translating known error types into JSON responses. */
 export function errorMiddleware(
   err: unknown,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
@@ -53,7 +53,6 @@ export function errorMiddleware(
     res.status(400).json({ error: err.message });
     return;
   }
-  // eslint-disable-next-line no-console
-  console.error("Unhandled error:", err);
+  req.log.error({ err }, "unhandled error");
   res.status(500).json({ error: "Internal server error" });
 }

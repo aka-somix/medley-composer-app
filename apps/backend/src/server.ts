@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
 import { createContainer } from "./container.js";
+import { logger } from "./http/logger.js";
 
 const PORT = Number.parseInt(process.env.PORT ?? "4000", 10);
 // Turso remote when TURSO_CONNECTION_URL is set; a local file otherwise.
@@ -16,6 +17,5 @@ const container = await createContainer({
 const app = createApp(container);
 
 app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Tiny Medleys API listening on http://localhost:${PORT} (db: ${DB_LOCATION})`);
+  logger.info({ port: PORT, db: DB_LOCATION }, "Tiny Medleys API listening");
 });
