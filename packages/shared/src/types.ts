@@ -76,6 +76,12 @@ export interface Suggestion {
   matches: SectionMatch[];
 }
 
+/** Distinct filter values for the songs list, sorted ascending. */
+export interface SongFacets {
+  artists: string[];
+  languages: string[];
+}
+
 /** Generic paginated envelope. */
 export interface Paginated<T> {
   items: T[];

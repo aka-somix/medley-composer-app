@@ -37,7 +37,7 @@ export function ChainPage() {
           <p className="text-sm text-mustard">Medley from</p>
           <h1 className="font-display text-3xl">{startSong.title}</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <ScaleSelector value={displayScale} onChange={setDisplayScale} />
           {chain.length > 1 ? (
             <Button variant="outline" onClick={reset}>

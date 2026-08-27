@@ -1,9 +1,10 @@
 {
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
-    "ponytail@ponytail": true
-  },
   "env": {
     "PONYTAIL_MODE": "full"
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "ponytail@ponytail": true,
+    "playwright@claude-plugins-official": true
   }
 }

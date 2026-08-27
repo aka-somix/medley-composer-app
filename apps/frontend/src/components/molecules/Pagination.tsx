@@ -13,7 +13,7 @@ export function Pagination({
 }) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   return (
-    <div className="flex items-center justify-between gap-4 text-sm text-sepia">
+    <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-sepia">
       <Button variant="outline" onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
         ← Prev
       </Button>

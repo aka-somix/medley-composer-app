@@ -155,6 +155,16 @@ describe("MedleyChain", () => {
     for (let i = 0; i < 6; i++) {
       expect(screen.getByText(`Song ${i}`)).toBeInTheDocument();
     }
+
+    // Shrink to a phone-width container: everything collapses back to one column,
+    // so the chain scrolls vertically instead of clipping sideways.
+    Object.defineProperty(chainEl, "clientWidth", { value: 360, configurable: true });
+    act(() => trigger?.());
+
+    for (let i = 0; i < 6; i++) {
+      expect(node(i).style.gridColumn).toBe("1");
+      expect(node(i).style.gridRow).toBe(String(i + 1));
+    }
   });
 
   it("calls onRemoveLast when the last song's remove button is clicked", async () => {

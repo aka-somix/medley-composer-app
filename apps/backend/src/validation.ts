@@ -30,9 +30,18 @@ export const batchImportSchema = z.object({
   songs: z.array(z.unknown()).min(1).max(200),
 });
 
+const filterValue = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v : undefined));
+
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),
+  q: filterValue,
+  artist: filterValue,
+  language: filterValue,
 });
 
 export const searchQuerySchema = z.object({
@@ -42,3 +51,4 @@ export const searchQuerySchema = z.object({
 export type CreateSongBody = z.infer<typeof createSongSchema>;
 export type UpdateSongBody = z.infer<typeof updateSongSchema>;
 export type BatchImportBody = z.infer<typeof batchImportSchema>;
+export type ListSongsQuery = z.infer<typeof listQuerySchema>;

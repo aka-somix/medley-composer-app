@@ -21,8 +21,12 @@ export class SongsController {
   ) {}
 
   list = async (req: Request, res: Response): Promise<void> => {
-    const { page, pageSize } = listQuerySchema.parse(req.query);
-    res.json(await this.songService.list(page, pageSize));
+    const { page, pageSize, q, artist, language } = listQuerySchema.parse(req.query);
+    res.json(await this.songService.list(page, pageSize, { q, artist, language }));
+  };
+
+  facets = async (_req: Request, res: Response): Promise<void> => {
+    res.json(await this.songService.facets());
   };
 
   search = async (req: Request, res: Response): Promise<void> => {

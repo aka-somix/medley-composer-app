@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CreateSongInput } from "@medleys/shared";
-import { api } from "./client.js";
+import { api, type SongFilters } from "./client.js";
 
 export function useSongSearch(query: string) {
   return useQuery({
@@ -10,10 +10,17 @@ export function useSongSearch(query: string) {
   });
 }
 
-export function useSongList(page: number, pageSize: number) {
+export function useSongList(page: number, pageSize: number, filters?: SongFilters) {
   return useQuery({
-    queryKey: ["songs", "list", page, pageSize],
-    queryFn: () => api.listSongs(page, pageSize),
+    queryKey: ["songs", "list", page, pageSize, filters],
+    queryFn: () => api.listSongs(page, pageSize, filters),
+  });
+}
+
+export function useSongFacets() {
+  return useQuery({
+    queryKey: ["songs", "facets"],
+    queryFn: () => api.getSongFacets(),
   });
 }
 

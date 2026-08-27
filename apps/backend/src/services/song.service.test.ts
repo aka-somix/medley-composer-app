@@ -209,3 +209,101 @@ describe("SongService.createMany", () => {
     expect(page.total).toBe(1);
   });
 });
+
+describe("SongService.list filters", () => {
+  let container: Container;
+  beforeEach(async () => {
+    container = await makeContainer();
+
+    const valid = (over: Record<string, unknown> = {}) => ({
+      title: "T",
+      artist: "A",
+      bpm: 100,
+      scale: "C",
+      language: "English",
+      verseChords: "C, G",
+      chorusChords: "F, C",
+      ...over,
+    });
+
+    await container.songService.createMany([
+      valid({ title: "Cream Sky", artist: "The Grooves", language: "English" }),
+      valid({ title: "Nightfall", artist: "Cream", language: "Italian" }),
+      valid({ title: "100% Sure", artist: "The Grooves", language: "English" }),
+      valid({ title: "Other", artist: "Someone Else", language: "French" }),
+    ]);
+  });
+
+  it("filters by q matching either title or artist", async () => {
+    const page = await container.songService.list(1, 20, { q: "cream" });
+    expect(page.total).toBe(2);
+    expect(page.items.map((s) => s.title).sort()).toEqual(["Cream Sky", "Nightfall"]);
+  });
+
+  it("filters by artist with an exact case-insensitive match", async () => {
+    const page = await container.songService.list(1, 20, { artist: "the grooves" });
+    expect(page.total).toBe(2);
+    expect(page.items.every((s) => s.artist === "The Grooves")).toBe(true);
+  });
+
+  it("filters by language", async () => {
+    const page = await container.songService.list(1, 20, { language: "Italian" });
+    expect(page.total).toBe(1);
+    expect(page.items[0]!.title).toBe("Nightfall");
+  });
+
+  it("combines artist and language filters with AND", async () => {
+    const page = await container.songService.list(1, 20, {
+      artist: "The Grooves",
+      language: "English",
+    });
+    expect(page.total).toBe(2);
+  });
+
+  it("reflects the filtered count in total, not the table size", async () => {
+    const page = await container.songService.list(1, 1, { artist: "The Grooves" });
+    expect(page.total).toBe(2);
+    expect(page.items).toHaveLength(1);
+  });
+
+  it("treats a % in q as a literal character, not a wildcard", async () => {
+    const page = await container.songService.list(1, 20, { q: "%" });
+    expect(page.total).toBe(1);
+    expect(page.items[0]!.title).toBe("100% Sure");
+  });
+
+  it("is case-insensitive for q", async () => {
+    const page = await container.songService.list(1, 20, { q: "CREAM" });
+    expect(page.total).toBe(2);
+  });
+});
+
+describe("SongService.facets", () => {
+  let container: Container;
+  beforeEach(async () => {
+    container = await makeContainer();
+
+    const valid = (over: Record<string, unknown> = {}) => ({
+      title: "T",
+      artist: "A",
+      bpm: 100,
+      scale: "C",
+      language: "English",
+      verseChords: "C, G",
+      chorusChords: "F, C",
+      ...over,
+    });
+
+    await container.songService.createMany([
+      valid({ title: "One", artist: "Zebra", language: "Italian" }),
+      valid({ title: "Two", artist: "Apple", language: "English" }),
+      valid({ title: "Three", artist: "Apple", language: "English" }),
+    ]);
+  });
+
+  it("returns distinct artists and languages, sorted ascending", async () => {
+    const facets = await container.songService.facets();
+    expect(facets.artists).toEqual(["Apple", "Zebra"]);
+    expect(facets.languages).toEqual(["English", "Italian"]);
+  });
+});

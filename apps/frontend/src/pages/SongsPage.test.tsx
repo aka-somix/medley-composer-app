@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { Paginated, Song } from "@medleys/shared";
+import type { Paginated, Song, SongFacets } from "@medleys/shared";
 import { SongsPage } from "./SongsPage.js";
 import { renderWithProviders } from "../test/utils.js";
 import * as auth from "../api/useAuth.js";
@@ -20,10 +20,22 @@ const SONG: Song = {
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
+const FACETS: SongFacets = { artists: ["The Grooves"], languages: ["English"] };
+
 function jsonResponse(body: unknown) {
   return new Response(JSON.stringify(body), {
     status: 200,
     headers: { "Content-Type": "application/json" },
+  });
+}
+
+function mockSongsFetch(list: Paginated<Song>, facets: SongFacets = FACETS) {
+  return vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const url = input.toString();
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (method === "DELETE") return Promise.resolve(new Response(null, { status: 204 }));
+    if (url.includes("/api/songs/facets")) return Promise.resolve(jsonResponse(facets));
+    return Promise.resolve(jsonResponse(list));
   });
 }
 
@@ -43,11 +55,7 @@ afterEach(() => {
 describe("SongsPage delete flow", () => {
   it("closes the edit panel back to 'Add a song' after a confirmed delete", async () => {
     const list: Paginated<Song> = { items: [SONG], total: 1, page: 1, pageSize: 8 };
-    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
-      const method = (init?.method ?? "GET").toUpperCase();
-      if (method === "DELETE") return Promise.resolve(new Response(null, { status: 204 }));
-      return Promise.resolve(jsonResponse(list));
-    });
+    mockSongsFetch(list);
     const user = userEvent.setup();
     renderWithProviders(<SongsPage />);
 
@@ -72,7 +80,7 @@ describe("SongsPage auth gating", () => {
 
   it("hides the add-song form and edit affordance when signed out", async () => {
     vi.spyOn(auth, "useAuth").mockReturnValue({ user: null, token: null, signIn: vi.fn(), signOut: vi.fn() });
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(list));
+    mockSongsFetch(list);
     renderWithProviders(<SongsPage />);
 
     await screen.findByText("Cream Sky");
@@ -87,11 +95,69 @@ describe("SongsPage auth gating", () => {
       signIn: vi.fn(),
       signOut: vi.fn(),
     });
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(list));
+    mockSongsFetch(list);
     renderWithProviders(<SongsPage />);
 
     await screen.findByText("Cream Sky");
     expect(screen.getByRole("button", { name: /add song/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /edit cream sky/i })).toBeInTheDocument();
+  });
+});
+
+describe("SongsPage filters", () => {
+  const list: Paginated<Song> = { items: [SONG], total: 1, page: 1, pageSize: 8 };
+
+  it("renders artist and language options from the facets response", async () => {
+    mockSongsFetch(list);
+    renderWithProviders(<SongsPage />);
+
+    await screen.findByText("Cream Sky");
+    expect(
+      screen.getByRole("option", { name: "The Grooves" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "English" })).toBeInTheDocument();
+  });
+
+  it("issues a request with q= after typing in the search box", async () => {
+    const fetchMock = mockSongsFetch(list);
+    const user = userEvent.setup();
+    renderWithProviders(<SongsPage />);
+
+    await screen.findByText("Cream Sky");
+    await user.type(screen.getByPlaceholderText(/title or artist/i), "cream");
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map(([input]) => input.toString());
+      expect(urls.some((url) => url.includes("q=cream"))).toBe(true);
+    });
+  });
+
+  it("issues a request with language= after selecting a language", async () => {
+    const fetchMock = mockSongsFetch(list);
+    const user = userEvent.setup();
+    renderWithProviders(<SongsPage />);
+
+    await screen.findByText("Cream Sky");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Language" }), "English");
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map(([input]) => input.toString());
+      expect(urls.some((url) => url.includes("language=English"))).toBe(true);
+    });
+  });
+
+  it("shows the filtered empty state when a filter is applied and no songs match", async () => {
+    const empty: Paginated<Song> = { items: [], total: 0, page: 1, pageSize: 8 };
+    const user = userEvent.setup();
+    mockSongsFetch(list);
+    renderWithProviders(<SongsPage />);
+
+    await screen.findByText("Cream Sky");
+    mockSongsFetch(empty);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Language" }), "English");
+
+    expect(
+      await screen.findByText("No songs match these filters."),
+    ).toBeInTheDocument();
   });
 });

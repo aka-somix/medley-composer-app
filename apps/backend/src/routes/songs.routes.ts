@@ -7,6 +7,7 @@ export function createSongsRouter(controller: SongsController, requireInvited: R
   const router = Router();
 
   router.get("/search", asyncHandler(controller.search));
+  router.get("/facets", asyncHandler(controller.facets));
   router.get("/", asyncHandler(controller.list));
   router.post("/batch", requireInvited, asyncHandler(controller.batchImport));
   router.post("/", requireInvited, asyncHandler(controller.create));

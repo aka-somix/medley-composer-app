@@ -4,8 +4,9 @@ import {
   type BatchImportResult,
   type Paginated,
   type Song,
+  type SongFacets,
 } from "@medleys/shared";
-import type { SongRepository } from "../repositories/song.repository.js";
+import type { SongFilters, SongRepository } from "../repositories/song.repository.js";
 import { createSongSchema, type CreateSongBody, type UpdateSongBody } from "../validation.js";
 import { NotFoundError } from "../http/errors.js";
 
@@ -102,14 +103,18 @@ export class SongService {
     return song;
   }
 
-  async list(page: number, pageSize: number): Promise<Paginated<Song>> {
-    const { items, total } = await this.repo.list(page, pageSize);
+  async list(page: number, pageSize: number, filters?: SongFilters): Promise<Paginated<Song>> {
+    const { items, total } = await this.repo.list(page, pageSize, filters);
     return { items, total, page, pageSize };
   }
 
   async search(query: string): Promise<Song[]> {
     if (query.length === 0) return [];
     return this.repo.searchByTitle(query);
+  }
+
+  async facets(): Promise<SongFacets> {
+    return this.repo.facets();
   }
 
   /** Update a song; re-translates any chord section that was provided. */

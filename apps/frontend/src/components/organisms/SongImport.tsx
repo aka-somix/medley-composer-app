@@ -71,7 +71,7 @@ export function SongImport({ onImported }: { onImported?: () => void }) {
         >
           {importSongs.isPending ? "Importing…" : "Import JSON"}
         </Button>
-        <span className="text-xs text-dust">Bulk-add songs from a .json file</span>
+        <span className="text-xs text-sepia/70">Bulk-add songs from a .json file</span>
         <input
           ref={inputRef}
           type="file"

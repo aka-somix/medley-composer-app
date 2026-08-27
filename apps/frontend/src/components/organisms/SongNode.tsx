@@ -17,17 +17,7 @@ export function SongNode({
   onRemove?: () => void;
 }) {
   return (
-    <article className="relative flex w-72 shrink-0 flex-col gap-3 rounded-2xl border border-dust bg-cream/80 p-5 shadow-vinyl sm:w-80">
-      {onRemove ? (
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={`Remove ${song.title} from the chain`}
-          className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-dust bg-cream text-sm text-sepia/70 shadow-vinyl transition-colors hover:border-rust hover:text-rust"
-        >
-          ✕
-        </button>
-      ) : null}
+    <article className="flex w-full max-w-xs flex-col gap-3 rounded-2xl border border-dust bg-cream/80 p-5 shadow-vinyl sm:w-80 sm:shrink-0">
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <span className="text-xs font-semibold uppercase tracking-wider text-mustard">#{index + 1}</span>
@@ -38,6 +28,16 @@ export function SongNode({
           <Tag tone="mustard">{song.bpm} BPM</Tag>
           <Tag tone="teal">orig. {song.scale}</Tag>
         </div>
+        {onRemove ? (
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label={`Remove ${song.title} from the chain`}
+            className="-mr-2 -mt-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-dust bg-cream text-sm text-sepia/70 shadow-vinyl transition-colors hover:border-rust hover:text-rust"
+          >
+            ✕
+          </button>
+        ) : null}
       </header>
       <div className="flex flex-col gap-2 border-t border-dust/60 pt-3">
         <ChordRow label="Verse" chords={transpose(song.verseDegrees, displayScale)} />

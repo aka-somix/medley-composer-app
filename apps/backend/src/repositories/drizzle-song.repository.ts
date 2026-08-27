@@ -1,8 +1,8 @@
-import type { Song } from "@medleys/shared";
-import { eq, like, sql, desc } from "drizzle-orm";
+import type { Song, SongFacets } from "@medleys/shared";
+import { and, eq, sql, desc, type SQL } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import { songs, type SongRow } from "../db/schema.js";
-import type { SongRepository } from "./song.repository.js";
+import type { SongFilters, SongRepository } from "./song.repository.js";
 
 function toSong(row: SongRow): Song {
   return {
@@ -23,6 +23,28 @@ function toSong(row: SongRow): Song {
 /** Escape LIKE wildcards so user input is matched literally. */
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
+/** Compose the `list()` filters into a single WHERE clause, or undefined when none apply. */
+function buildWhere(filters?: SongFilters): SQL | undefined {
+  const conditions: SQL[] = [];
+
+  if (filters?.q) {
+    const pattern = `%${escapeLike(filters.q.toLowerCase())}%`;
+    conditions.push(
+      sql`(lower(${songs.title}) LIKE ${pattern} ESCAPE '\\' OR lower(${songs.artist}) LIKE ${pattern} ESCAPE '\\')`,
+    );
+  }
+  if (filters?.artist) {
+    conditions.push(sql`lower(trim(${songs.artist})) = ${filters.artist.trim().toLowerCase()}`);
+  }
+  if (filters?.language) {
+    conditions.push(
+      sql`lower(trim(${songs.language})) = ${filters.language.trim().toLowerCase()}`,
+    );
+  }
+
+  return conditions.length > 0 ? and(...conditions) : undefined;
 }
 
 export class DrizzleSongRepository implements SongRepository {
@@ -55,16 +77,26 @@ export class DrizzleSongRepository implements SongRepository {
     return rows.map(toSong);
   }
 
-  async list(page: number, pageSize: number): Promise<{ items: Song[]; total: number }> {
+  async list(
+    page: number,
+    pageSize: number,
+    filters?: SongFilters,
+  ): Promise<{ items: Song[]; total: number }> {
     const offset = (page - 1) * pageSize;
+    const where = buildWhere(filters);
     const rows = await this.db
       .select()
       .from(songs)
+      .where(where)
       .orderBy(desc(songs.createdAt))
       .limit(pageSize)
       .offset(offset)
       .all();
-    const countRow = await this.db.select({ count: sql<number>`count(*)` }).from(songs).get();
+    const countRow = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(songs)
+      .where(where)
+      .get();
     return { items: rows.map(toSong), total: countRow?.count ?? 0 };
   }
 
@@ -73,10 +105,27 @@ export class DrizzleSongRepository implements SongRepository {
     const rows = await this.db
       .select()
       .from(songs)
-      .where(like(songs.title, pattern))
+      .where(sql`${songs.title} LIKE ${pattern} ESCAPE '\\'`)
       .orderBy(desc(songs.createdAt))
       .all();
     return rows.map(toSong);
+  }
+
+  async facets(): Promise<SongFacets> {
+    const artistRows = await this.db
+      .selectDistinct({ artist: songs.artist })
+      .from(songs)
+      .orderBy(songs.artist)
+      .all();
+    const languageRows = await this.db
+      .selectDistinct({ language: songs.language })
+      .from(songs)
+      .orderBy(songs.language)
+      .all();
+    return {
+      artists: artistRows.map((r) => r.artist),
+      languages: languageRows.map((r) => r.language),
+    };
   }
 
   async update(id: string, patch: Partial<Omit<Song, "id" | "createdAt">>): Promise<Song | null> {

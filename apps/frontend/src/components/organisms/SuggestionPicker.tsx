@@ -42,7 +42,7 @@ export function SuggestionPicker({
           +
         </button>
       ) : (
-        <div className="w-72 rounded-2xl border border-dust bg-parchment/70 p-4 shadow-vinyl sm:w-80">
+        <div className="w-full max-w-xs rounded-2xl border border-dust bg-parchment/70 p-4 shadow-vinyl sm:w-80">
           <div className="mb-3 flex items-center justify-between">
             <h4 className="font-display text-lg">Compatible next</h4>
             <button
@@ -72,7 +72,7 @@ export function SuggestionPicker({
                   }}
                   className="w-full rounded-lg border border-dust bg-cream/70 p-3 text-left transition-colors hover:border-mustard hover:bg-cream"
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                     <span className="truncate font-semibold">{s.song.title}</span>
                     <div className="flex shrink-0 items-center gap-1.5">
                       <span className="sr-only">Matched on </span>
@@ -80,7 +80,7 @@ export function SuggestionPicker({
                       <Tag tone="mustard">{Math.round(s.score * 100)}%</Tag>
                     </div>
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-sepia/70">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-sepia/70">
                     <span className="truncate">{s.song.artist}</span>
                     <span>· {s.song.bpm} BPM</span>
                     <span>· {s.song.scale}</span>

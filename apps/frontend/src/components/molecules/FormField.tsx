@@ -17,7 +17,7 @@ export function FormField({
         {label}
       </label>
       {children}
-      {hint ? <span className="text-xs text-dust">{hint}</span> : null}
+      {hint ? <span className="text-xs text-sepia/70">{hint}</span> : null}
     </div>
   );
 }

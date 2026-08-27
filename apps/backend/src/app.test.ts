@@ -95,6 +95,53 @@ describe("GET /api/songs", () => {
   });
 });
 
+describe("GET /api/songs with filters", () => {
+  it("returns filtered items and total for q, artist, and language", async () => {
+    await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, title: "Cream Sky", artist: "The Grooves", language: "English" });
+    await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, title: "Other Song", artist: "Someone Else", language: "French" });
+
+    const res = await request(app).get(
+      "/api/songs?q=cream&artist=The%20Grooves&language=English",
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(1);
+    expect(res.body.items[0].title).toBe("Cream Sky");
+  });
+
+  it("rejects an invalid page with 400", async () => {
+    const res = await request(app).get("/api/songs?page=0&q=x");
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /api/songs/facets", () => {
+  it("returns sorted, deduped artists and languages", async () => {
+    await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, title: "One", artist: "Zebra", language: "Italian" });
+    await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, title: "Two", artist: "Apple", language: "English" });
+    await request(app)
+      .post("/api/songs")
+      .set("Authorization", "Bearer test")
+      .send({ ...validBody, title: "Three", artist: "Apple", language: "English" });
+
+    const res = await request(app).get("/api/songs/facets");
+    expect(res.status).toBe(200);
+    expect(res.body.artists).toEqual(["Apple", "Zebra"]);
+    expect(res.body.languages).toEqual(["English", "Italian"]);
+  });
+});
+
 describe("GET /api/songs/search", () => {
   it("matches titles case-insensitively", async () => {
     await request(app)

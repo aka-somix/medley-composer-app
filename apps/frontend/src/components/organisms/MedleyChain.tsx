@@ -3,8 +3,10 @@ import type { Song } from "@medleys/shared";
 import { SongNode } from "./SongNode.js";
 import { SuggestionPicker } from "./SuggestionPicker.js";
 
-const COL_GAP = 48; // horizontal room for the connecting line between cards in a row (px)
-const ROW_GAP = 44; // vertical room for the line where the snake turns to the next row (px)
+// Fixed px so the JS measurement and the CSS grid gap can never disagree (the SVG connector
+// positions derive from the measured layout, which derives from these).
+const COL_GAP = 32; // horizontal room for the connecting line between cards in a row (px)
+const ROW_GAP = 32; // vertical room for the line where the snake turns to the next row (px)
 
 type Segment = { x1: number; y1: number; x2: number; y2: number };
 
@@ -108,64 +110,70 @@ export function MedleyChain({
   const columns = perRow ?? 1;
 
   return (
-    <div ref={containerRef} data-testid="chain" className="relative w-full overflow-hidden pb-4">
-      <svg className="pointer-events-none absolute inset-0 h-full w-full text-dust" aria-hidden>
-        {segments.map((s, i) => (
-          <line
-            key={i}
-            x1={s.x1}
-            y1={s.y1}
-            x2={s.x2}
-            y2={s.y2}
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-          />
-        ))}
-      </svg>
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: `repeat(${columns}, max-content)`,
-          columnGap: COL_GAP,
-          rowGap: ROW_GAP,
-          justifyContent: "start",
-        }}
-      >
-        {Array.from({ length: nodeCount }).map((_, i) => {
-          const row = Math.floor(i / columns);
-          const posInRow = i % columns;
-          // Even rows read left→right; odd rows right→left (the boustrophedon turn).
-          const col = row % 2 === 0 ? posInRow : columns - 1 - posInRow;
-          const isPicker = i === chain.length;
-          return (
-            <div
-              key={isPicker ? "picker" : chain[i]!.id}
-              ref={(el) => {
-                nodeRefs.current[i] = el;
-              }}
-              data-testid={isPicker ? "chain-picker" : "chain-card"}
-              data-node-index={i}
-              // Cards stretch to fill the row height; the small "+" centers so it meets
-              // the connecting line at the row's mid-height instead of floating at the top.
-              className={`flex h-full justify-center ${isPicker ? "items-center" : ""}`}
-              style={{ gridColumn: col + 1, gridRow: row + 1 }}
-            >
-              {isPicker ? (
-                last ? <SuggestionPicker fromSong={last} excludeIds={chainIds} onPick={onAppend} /> : null
-              ) : (
-                <SongNode
-                  song={chain[i]!}
-                  displayScale={displayScale}
-                  index={i}
-                  onRemove={
-                    onRemoveLast && i === chain.length - 1 && chain.length > 1 ? onRemoveLast : undefined
-                  }
-                />
-              )}
-            </div>
-          );
-        })}
+    <div ref={containerRef} data-testid="chain" className="w-full overflow-x-auto overscroll-x-contain pb-4">
+      {/* Positioned wrapper sized to the grid, so the connector overlay — and the node
+          offsetLeft/offsetTop it is measured from — covers the full scrollable width. */}
+      <div className="relative w-max min-w-full">
+        <svg className="pointer-events-none absolute inset-0 h-full w-full text-dust" aria-hidden>
+          {segments.map((s, i) => (
+            <line
+              key={i}
+              x1={s.x1}
+              y1={s.y1}
+              x2={s.x2}
+              y2={s.y2}
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          ))}
+        </svg>
+        <div
+          className="grid"
+          style={{
+            // One column means a narrow container: let the card be fluid (capped by its own
+            // max-w-xs) instead of a fixed column that would overflow a small viewport.
+            gridTemplateColumns: columns === 1 ? "minmax(0, 20rem)" : `repeat(${columns}, max-content)`,
+            columnGap: COL_GAP,
+            rowGap: ROW_GAP,
+            justifyContent: "start",
+          }}
+        >
+          {Array.from({ length: nodeCount }).map((_, i) => {
+            const row = Math.floor(i / columns);
+            const posInRow = i % columns;
+            // Even rows read left→right; odd rows right→left (the boustrophedon turn).
+            const col = row % 2 === 0 ? posInRow : columns - 1 - posInRow;
+            const isPicker = i === chain.length;
+            return (
+              <div
+                key={isPicker ? "picker" : chain[i]!.id}
+                ref={(el) => {
+                  nodeRefs.current[i] = el;
+                }}
+                data-testid={isPicker ? "chain-picker" : "chain-card"}
+                data-node-index={i}
+                // Cards stretch to fill the row height; the small "+" centers so it meets
+                // the connecting line at the row's mid-height instead of floating at the top.
+                className={`flex h-full justify-center ${isPicker ? "items-center" : ""}`}
+                style={{ gridColumn: col + 1, gridRow: row + 1 }}
+              >
+                {isPicker ? (
+                  last ? <SuggestionPicker fromSong={last} excludeIds={chainIds} onPick={onAppend} /> : null
+                ) : (
+                  <SongNode
+                    song={chain[i]!}
+                    displayScale={displayScale}
+                    index={i}
+                    onRemove={
+                      onRemoveLast && i === chain.length - 1 && chain.length > 1 ? onRemoveLast : undefined
+                    }
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

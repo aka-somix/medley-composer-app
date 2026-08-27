@@ -3,9 +3,16 @@ import type {
   CreateSongInput,
   Paginated,
   Song,
+  SongFacets,
   Suggestion,
 } from "@medleys/shared";
 import { getToken, setToken } from "./token-store.js";
+
+export interface SongFilters {
+  q?: string;
+  artist?: string;
+  language?: string;
+}
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
@@ -35,8 +42,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  listSongs: (page: number, pageSize: number) =>
-    request<Paginated<Song>>(`/api/songs?page=${page}&pageSize=${pageSize}`),
+  listSongs: (page: number, pageSize: number, filters?: SongFilters) => {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (filters?.q) params.set("q", filters.q);
+    if (filters?.artist) params.set("artist", filters.artist);
+    if (filters?.language) params.set("language", filters.language);
+    return request<Paginated<Song>>(`/api/songs?${params.toString()}`);
+  },
+  getSongFacets: () => request<SongFacets>("/api/songs/facets"),
   searchSongs: (q: string) =>
     request<Song[]>(`/api/songs/search?q=${encodeURIComponent(q)}`),
   getSong: (id: string) => request<Song>(`/api/songs/${id}`),
